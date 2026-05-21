@@ -1,0 +1,46 @@
+<div id="newItemModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 500px; height: auto; max-height: 80vh;">
+        <button class="modal-close" onclick="closeNewItemModal()">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-step active">
+            <div class="modal-body flex-col gap-0! overflow-visible!">
+                <h2 class="modal-title" id="newItemModalTitle">New Item</h2>
+                
+                <div class="details-section w-full">
+                    <div class="form-group mb-4!">
+                        <label class="text-sm! text-gray-500! mb-1! block">Item Type</label>
+                        <div class="dropdown-container">
+                            <button class="modal-dropdown-trigger xs" onclick="toggleDropdown(this)" id="itemTypeTrigger">
+                                <span class="selected-value">Laundry Service</span>
+                                <i data-lucide="chevron-down"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item" onclick="selectItemType(this, 'Laundry Service')">Laundry Service</div>
+                                <div class="dropdown-item" onclick="selectItemType(this, 'Add-on')">Add-on</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4!">
+                        <label class="text-sm! text-gray-500! mb-1! block" id="itemNameLabel">Service Name</label>
+                        <input type="text" placeholder="e.g. Wash & Dry" class="modal-input" id="itemName" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
+                    </div>
+
+                    <div class="form-group mb-4!">
+                        <label class="text-sm! text-gray-500! mb-1! block" id="itemPriceLabel">Price per Unit (₱)</label>
+                        <input type="number" step="0.01" min="0" placeholder="0.00" class="modal-input" id="itemPrice" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="footer-actions ml-auto!">
+                    <button class="btn-cancel" onclick="closeNewItemModal()">Cancel</button>
+                    <button class="btn-submit" onclick="saveNewItem()">Save Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

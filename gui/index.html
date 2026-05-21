@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>laven</title>
+
+    <!-- 
+        STYLING & THEME 
+        Core CSS architecture split for maintainability.
+    -->
+    <link rel="stylesheet" href="css/globals.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/tables.css">
+
+    <!-- 
+        EXTERNAL RESOURCES (FONTS & ICONS)
+        To run offline:
+        1. Download fonts in globals.css instructions.
+        2. Download Lucide Icons: https://unpkg.com/lucide@latest/dist/lucide.min.js
+        3. Replace CDN link with local path: <script src="gui/js/lucide.min.js"></script>
+    -->
+    <!-- Localized Assets for 100% Offline Capability -->
+    <script src="assets/js/lucide.min.js"></script>
+    <script>
+        // Fallback if CDN fails
+        if (!window.lucide) {
+            console.error('Lucide CDN failed to load');
+            // Create simple icon fallbacks
+            window.lucide = {
+                createIcons: () => {
+                    console.log('Using icon fallbacks');
+                    document.querySelectorAll('[data-lucide]').forEach(el => {
+                        const iconName = el.getAttribute('data-lucide');
+                        el.innerHTML = getIconFallback(iconName);
+                    });
+                }
+            };
+        }
+
+        function getIconFallback(name) {
+            const fallbacks = {
+                'layout-dashboard': '📊',
+                'shopping-bag': '🛍️',
+                'badge-plus': '➕',
+                'users': '👥',
+                'id-card': '🆔',
+                'circle-dollar-sign': '💰',
+                'plus': '+',
+                'edit-2': '✏️',
+                'trash-2': '🗑️',
+                'chevron-left': '←',
+                'chevron-down': '↓'
+            };
+            return fallbacks[name] || '•';
+        }
+    </script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-section">
+                <div class="logo-group">
+                    <div class="logo-icon" style="background: none; border-radius: 0; min-width: 32px; width: 32px; height: 21px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="32" height="21" viewBox="0 0 87 57" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto;">
+                            <path d="M48.2061 11C55.1093 11.0001 60.7057 13.702 60.7061 17.0352C60.7061 17.2391 60.6842 17.4404 60.6429 17.639C60.6358 17.6732 60.6473 17.7085 60.674 17.731C60.6946 17.7485 60.7061 17.7742 60.7061 17.8012V46.5566C60.7062 49.399 63.0102 51.7029 65.8525 51.7031C67.6535 51.7031 69.2387 50.7783 70.1585 49.3776C70.4029 49.0055 71 49.0508 71 49.4961C71 53.6402 65.4036 57 58.5 57C50.8194 57 43.0461 53 35.3655 53H10C4.47715 53 0 48.5228 0 43C0 37.4772 4.47715 33 10 33H34.5784C40.8864 33 46 27.8864 46 21.5784V13.3055C46 12.0561 46.9567 11 48.2061 11ZM74.5 9C81.4036 9 87 12.4328 87 16.667C87 17.2227 86.9751 17.7808 86.9948 18.3362C86.9982 18.433 87 18.5303 87 18.6279V52.6924C87 53.9425 86.044 55 84.7939 55C77.8904 55 72.2939 52.2388 72.2939 48.833C72.294 48.6355 72.3135 48.4403 72.3506 48.2477C72.3564 48.2177 72.346 48.1869 72.3226 48.1673C72.3042 48.1518 72.2939 48.1288 72.2939 48.1047V18.5586C72.2938 15.7162 69.9898 13.4123 67.1475 13.4121C64.961 13.4121 63.0928 14.7752 62.3469 16.6982C62.2753 16.8828 62 16.865 62 16.667C62 12.4328 67.5964 9 74.5 9ZM15 0C23.2843 0 30 6.71573 30 15C30 17.3919 27.8022 19 25.4103 19H20.5C17.4624 19 15 21.4624 15 24.5C15 25.5654 15.3031 26.5597 15.8277 27.4017C16.3966 28.3148 16.0758 30 15 30C6.71573 30 0 23.2843 0 15C0 6.71573 6.71573 0 15 0Z" fill="var(--primary, #005234)"/>
+                        </svg>
+                    </div>
+                    <h1 class="logo-text">laven</h1>
+                </div>
+                <button class="sidebar-toggle"
+                    onclick="document.getElementById('sidebar').classList.toggle('collapsed')">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" onclick="loadView('dashboard', this)">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span class="nav-label">Dashboard</span>
+                    <div class="tooltip">Dashboard</div>
+                </a>
+                <a href="#" class="nav-item" onclick="loadView('orders', this)">
+                    <i data-lucide="shopping-bag"></i>
+                    <span class="nav-label">Orders</span>
+                    <div class="tooltip">Orders</div>
+                </a>
+                <a href="#" class="nav-item" onclick="loadView('services', this)">
+                    <i data-lucide="badge-plus"></i>
+                    <span class="nav-label">Services & Add-ons</span>
+                    <div class="tooltip">Services</div>
+                </a>
+                <a href="#" class="nav-item" onclick="loadView('customers', this)">
+                    <i data-lucide="users"></i>
+                    <span class="nav-label">Customers</span>
+                    <div class="tooltip">Customers</div>
+                </a>
+                <a href="#" class="nav-item" onclick="loadView('employees', this)">
+                    <i data-lucide="id-card"></i>
+                    <span class="nav-label">Employees</span>
+                    <div class="tooltip">Employees</div>
+                </a>
+                <a href="#" class="nav-item" onclick="loadView('revenue', this)">
+                    <i data-lucide="circle-dollar-sign"></i>
+                    <span class="nav-label">Revenue</span>
+                    <div class="tooltip">Revenue & Payments</div>
+                </a>
+            </nav>
+            <div class="sidebar-footer" style="margin-top: auto; padding: 0 16px;">
+                <a href="#" id="sidebarResetBtn" class="nav-item reset-btn-item" onclick="triggerDatabaseReset()" style="display: none; gap: 12px; color: var(--danger); transition: all 0.2s ease;">
+                    <i data-lucide="rotate-ccw" style="color: var(--danger);"></i>
+                    <span class="nav-label" style="color: var(--danger); font-weight: 600;">Reset Database</span>
+                    <div class="tooltip" style="background: var(--danger); color: white;">Reset Database</div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="user-profile" id="userProfileDropdownTrigger" onclick="toggleProfileDropdown(event)"
+                    style="position: relative; cursor: pointer; user-select: none;">
+                    <img src="data:image/svg+xml;utf8,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;circle cx='50' cy='50' r='50' fill='%2300A38D'/&gt;&lt;text x='50' y='58' font-family='sans-serif' font-size='44' font-weight='700' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'&gt;A&lt;/text&gt;&lt;/svg&gt;"
+                        alt="Avatar" class="avatar" id="headerAvatar">
+                    <span class="user-name" id="headerUsername">Sean Gabor</span>
+                    <i data-lucide="chevron-down" id="headerChevron"></i>
+
+                    <!-- Profile dropdown -->
+                    <div id="profileDropdown" class="profile-dropdown"
+                        style="display: none; position: absolute; top: calc(100% + 10px); right: 0; background: #ffffff; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md); padding: 6px; min-width: 160px; z-index: 999999;">
+                        <div class="profile-dropdown-user-info"
+                            style="padding: 10px 12px 6px; display: flex; flex-direction: column; gap: 2px;">
+                            <span class="profile-dropdown-role" id="dropdownRoleText"
+                                style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px;">Owner</span>
+                        </div>
+                        <div style="height: 1px; background: var(--border-color); margin: 6px 0;"></div>
+                        <button class="profile-dropdown-item logout" onclick="triggerAppLogout(event)"
+                            style="width: 100%; border: none; background: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; font-size: 12px; font-weight: 500; color: #f43f5e; border-radius: 8px; cursor: pointer; text-align: left; transition: background 0.2s;">
+                            <i data-lucide="log-out" style="width: 14px; height: 14px; stroke-width: 2.5;"></i>
+                            Sign Out
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Box -->
+            <div id="view-container">
+                <!-- gui/views/*.html loads here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Login Portal Overlay -->
+    <div id="login-overlay"
+        style="display: none; position: fixed; inset: 0; background: radial-gradient(circle at top left, #f8fafc, #e2e8f0); z-index: 9999999; display: flex; align-items: center; justify-content: center; font-family: inherit;">
+        <div class="login-box-container"
+            style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); padding: 48px; border-radius: 24px; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.02); width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 32px; text-align: center; animation: fadeIn 0.4s ease forwards;">
+
+            <div class="login-header-group"
+                style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                <div class="login-sparkle-glow"
+                    style="width: 64px; height: 64px; border-radius: 18px; background: linear-gradient(135deg, rgba(20, 184, 166, 0.15), rgba(13, 148, 136, 0.05)); display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 2px rgba(255,255,255,0.4); margin-bottom: 8px;">
+                    <svg width="42" height="28" viewBox="0 0 87 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M48.2061 11C55.1093 11.0001 60.7057 13.702 60.7061 17.0352C60.7061 17.2391 60.6842 17.4404 60.6429 17.639C60.6358 17.6732 60.6473 17.7085 60.674 17.731C60.6946 17.7485 60.7061 17.7742 60.7061 17.8012V46.5566C60.7062 49.399 63.0102 51.7029 65.8525 51.7031C67.6535 51.7031 69.2387 50.7783 70.1585 49.3776C70.4029 49.0055 71 49.0508 71 49.4961C71 53.6402 65.4036 57 58.5 57C50.8194 57 43.0461 53 35.3655 53H10C4.47715 53 0 48.5228 0 43C0 37.4772 4.47715 33 10 33H34.5784C40.8864 33 46 27.8864 46 21.5784V13.3055C46 12.0561 46.9567 11 48.2061 11ZM74.5 9C81.4036 9 87 12.4328 87 16.667C87 17.2227 86.9751 17.7808 86.9948 18.3362C86.9982 18.433 87 18.5303 87 18.6279V52.6924C87 53.9425 86.044 55 84.7939 55C77.8904 55 72.2939 52.2388 72.2939 48.833C72.294 48.6355 72.3135 48.4403 72.3506 48.2477C72.3564 48.2177 72.346 48.1869 72.3226 48.1673C72.3042 48.1518 72.2939 48.1288 72.2939 48.1047V18.5586C72.2938 15.7162 69.9898 13.4123 67.1475 13.4121C64.961 13.4121 63.0928 14.7752 62.3469 16.6982C62.2753 16.8828 62 16.865 62 16.667C62 12.4328 67.5964 9 74.5 9ZM15 0C23.2843 0 30 6.71573 30 15C30 17.3919 27.8022 19 25.4103 19H20.5C17.4624 19 15 21.4624 15 24.5C15 25.5654 15.3031 26.5597 15.8277 27.4017C16.3966 28.3148 16.0758 30 15 30C6.71573 30 0 23.2843 0 15C0 6.71573 6.71573 0 15 0Z" fill="var(--primary, #005234)"/>
+                    </svg>
+                </div>
+                <h2
+                    style="font-size: 24px; font-weight: 700; color: var(--text-heading); margin: 0; letter-spacing: -0.5px;">
+                    laven</h2>
+                <p style="font-size: 13px; font-weight: 500; color: var(--text-main); opacity: 0.7; margin: 0;">Your
+                    Laundry Management System</p>
+            </div>
+
+            <div class="login-input-fields" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="login-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                    <i data-lucide="user"
+                        style="position: absolute; left: 16px; width: 18px; height: 18px; color: var(--text-main); opacity: 0.4;"></i>
+                    <input type="text" id="loginUsername" placeholder="Username" autocomplete="off"
+                        onkeypress="handleLoginEnter(event)"
+                        style="width: 100%; height: 48px; border: 1px solid var(--border-color); border-radius: 12px; padding: 0 16px 0 46px; font-size: 14px; font-weight: 500; color: var(--text-heading); background: #ffffff; outline: none; transition: all 0.2s;">
+                </div>
+                <div class="login-input-wrapper" style="position: relative; display: flex; align-items: center;">
+                    <i data-lucide="lock"
+                        style="position: absolute; left: 16px; width: 18px; height: 18px; color: var(--text-main); opacity: 0.4;"></i>
+                    <input type="password" id="loginPassword" placeholder="Password"
+                        onkeypress="handleLoginEnter(event)"
+                        style="width: 100%; height: 48px; border: 1px solid var(--border-color); border-radius: 12px; padding: 0 16px 0 46px; font-size: 14px; font-weight: 500; color: var(--text-heading); background: #ffffff; outline: none; transition: all 0.2s;">
+                </div>
+                <button class="btn-login-action" onclick="submitAppLogin()"
+                    style="width: 100%; height: 48px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: #ffffff; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2); transition: all 0.2s;">
+                    Sign In <i data-lucide="arrow-right" style="width: 16px; height: 16px; stroke-width: 2.5;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modal-container">
+        <!-- Add Order Modal -->
+        <div id="add-order-modal-mount"></div>
+        <!-- View Order Modal -->
+        <div id="view-order-modal-mount"></div>
+        <!-- Customer Modal -->
+        <div id="customer-modal-mount"></div>
+        <!-- Employee Modal -->
+        <div id="employee-modal-mount"></div>
+        <!-- Update Status Modal -->
+        <div id="update-status-modal-mount"></div>
+        <!-- Payment Overview Modal -->
+        <div id="payment-overview-modal-mount"></div>
+        <!-- New Item Modal (Services & Addons) -->
+        <div id="new-item-modal-mount"></div>
+        <!-- Delete Confirm Modal -->
+        <div id="delete-confirm-modal-mount"></div>
+    </div>
+
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/router.js"></script>
+    <script src="js/views/dashboard.js"></script>
+    <script src="js/views/orders.js"></script>
+    <script src="js/views/customers.js"></script>
+    <script src="js/views/employees.js"></script>
+    <script src="js/views/services.js"></script>
+    <script src="js/views/revenue.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

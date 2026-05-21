@@ -1,0 +1,142 @@
+<div class="orders-management-wrapper">
+    <div class="view-header">
+        <div class="view-title-group">
+            <h2>Revenue & Payments</h2>
+            <p class="view-subtitle">Monitor shop earnings, unpaid balances, and payment methods.</p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="stats-grid mb-8!">
+        <!-- Total Collected -->
+        <div class="metric-card primary">
+            <div class="metric-header">
+                <span class="metric-label">Total Collected</span>
+                <div class="dropdown-container">
+                    <button class="dropdown-filter" onclick="toggleDropdown(this)">
+                        <span class="selected-value">Today</span>
+                        <i data-lucide="chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" onclick="selectOption(this, 'Today'); window.setRevenueTimeframe('Today')">Today</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'Yesterday'); window.setRevenueTimeframe('Yesterday')">Yesterday</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'Last 7 Days'); window.setRevenueTimeframe('Last 7 Days')">Last 7 Days</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'This Month'); window.setRevenueTimeframe('This Month')">This Month</div>
+                    </div>
+                </div>
+            </div>
+            <div class="metric-value">
+                <span id="revTotal">₱0.00</span>
+            </div>
+        </div>
+
+        <!-- Unpaid Balances -->
+        <div class="metric-card white">
+            <div class="metric-header">
+                <span class="metric-label" style="color: var(--danger);">Unpaid Balances</span>
+                <div class="dropdown-container">
+                    <button class="dropdown-filter" onclick="toggleDropdown(this)">
+                        <span class="selected-value">Today</span>
+                        <i data-lucide="chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" onclick="selectOption(this, 'Today'); window.setRevenueTimeframe('Today')">Today</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'Yesterday'); window.setRevenueTimeframe('Yesterday')">Yesterday</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'Last 7 Days'); window.setRevenueTimeframe('Last 7 Days')">Last 7 Days</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'This Month'); window.setRevenueTimeframe('This Month')">This Month</div>
+                    </div>
+                </div>
+            </div>
+            <div class="metric-value">
+                <span id="revUnpaid" style="color: var(--danger);">₱0.00</span>
+            </div>
+        </div>
+
+        <!-- Breakdown -->
+        <div class="metric-card white">
+            <div class="metric-header">
+                <span class="metric-label">Cash vs GCash</span>
+                <div class="dropdown-container">
+                    <button class="dropdown-filter" onclick="toggleDropdown(this)">
+                        <span class="selected-value">Today</span>
+                        <i data-lucide="chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" onclick="selectOption(this, 'Today'); window.setRevenueTimeframe('Today')">Today</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'Yesterday'); window.setRevenueTimeframe('Yesterday')">Yesterday</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'Last 7 Days'); window.setRevenueTimeframe('Last 7 Days')">Last 7 Days</div>
+                        <div class="dropdown-item" onclick="selectOption(this, 'This Month'); window.setRevenueTimeframe('This Month')">This Month</div>
+                    </div>
+                </div>
+            </div>
+            <div class="metric-value"
+                style="font-size: 14px; gap: 12px; flex-direction: column; align-items: flex-start;">
+                <div style="display: flex; justify-content: space-between; width: 100%;">
+                    <span style="color: var(--text-muted);">Cash</span>
+                    <span id="revCash" style="font-weight: 700; color: var(--ready-text)">₱0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; width: 100%;">
+                    <span style="color: var(--text-muted);">G-Cash</span>
+                    <span id="revGCash" style="font-weight: 700; color: var(--info);">₱0.00</span>
+                </div>
+                <div id="revenueProgressBar"
+                    style="width: 100%; height: 8px; background: var(--claimed-bg); border-radius: 4px; overflow: hidden; display: flex; margin-top: 4px;">
+                    <div class="bar-cash" style="width: 50%; height: 100%; background: var(--primary);"></div>
+                    <div class="bar-gcash" style="width: 50%; height: 100%; background: var(--info);"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Controls -->
+    <div class="table-controls">
+        <div class="search-box">
+            <i data-lucide="search"></i>
+            <input type="text" class="search-input" placeholder="Search by Payment ID or Order Ref...">
+        </div>
+        <div class="filter-tabs">
+            <div class="filter-tab active">All Payments</div>
+            <div class="filter-tab">Paid</div>
+            <div class="filter-tab">Partially Paid</div>
+            <div class="filter-tab">Unpaid</div>
+            <div class="filter-tab">Cancelled</div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="data-table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>Order Ref</th>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="text-center" style="padding: 40px; color: var(--text-muted); text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                            <i data-lucide="refresh-cw" class="animate-spin" style="width: 24px; height: 24px; opacity: 0.6; animation: spin 2s linear infinite;"></i>
+                            <span>Loading payments...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-footer">
+        <p class="pagination-info">Showing <span id="revPageStart">0</span> to <span id="revPageEnd">0</span> of <span
+                id="revTotalItems">0</span> entries</p>
+        <div class="pagination-controls">
+            <button class="page-btn nav" id="revPrevBtn">Prev</button>
+            <div id="revPageNumbers" style="display: flex; gap: 4px;">
+            </div>
+            <button class="page-btn nav" id="revNextBtn">Next</button>
+        </div>
+    </div>
+</div>

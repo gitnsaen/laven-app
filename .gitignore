@@ -1,0 +1,16 @@
+# Python virtual environments & packages
+.venv-gtk/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Local SQLite databases & backups
+database.db
+database_backup_*.db
+
+# PyInstaller compilation directories
+build/
+dist/
+*.spec
+laven.spec

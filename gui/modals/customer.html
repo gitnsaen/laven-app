@@ -1,0 +1,26 @@
+<div id="customerModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 500px; height: auto;">
+        <button class="modal-close" onclick="closeCustomerModal()">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-step active">
+            <div class="modal-body" style="flex-direction: column; gap: 10px; padding-bottom: 20px;">
+                <h2 class="modal-title" id="customerModalTitle">New Customer</h2>
+                
+                <div class="details-section">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">Basic Information</p>
+                    <input type="text" placeholder="Full Name" class="modal-input" id="custName" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
+                    <input type="text" placeholder="Contact Number (e.g. 09123456789)" class="modal-input" id="custPhone" maxlength="11" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="footer-actions">
+                    <button class="btn-cancel" onclick="closeCustomerModal()">Cancel</button>
+                    <button class="btn-submit" onclick="saveCustomer()">Save Customer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+<div id="employeeModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 500px; height: auto; max-height: 80vh;">
+        <button class="modal-close" onclick="closeEmployeeModal()">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-step active">
+            <div class="modal-body flex-col gap-0! overflow-visible!">
+                <h2 class="modal-title" id="employeeModalTitle">Add New Employee</h2>
+                
+                <div class="details-section w-full">
+                    <h2 class="modal-title text-sm! text-gray-500! mb-2!">Staff Information</h2>
+                    <input type="text" class="modal-input" placeholder="First Name" id="empFirstName" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
+                    <input type="text" class="modal-input" placeholder="Middle Initial" id="empMidInit" maxlength="2" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
+                    <input type="text" class="modal-input" placeholder="Last Name" id="empLastName" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
+                    <input type="text" class="modal-input" placeholder="Contact Number (e.g. 09123456789)" id="empContact" maxlength="11" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <div class="footer-actions ml-auto!">
+                    <button class="btn-cancel" onclick="closeEmployeeModal()">Cancel</button>
+                    <button class="btn-submit" onclick="saveEmployee()">Save Employee</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

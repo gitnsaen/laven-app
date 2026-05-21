@@ -1,0 +1,61 @@
+<div class="orders-management-wrapper">
+    <div class="view-header">
+        <div class="view-title-group">
+            <h2>Customer Management</h2>
+            <p class="view-subtitle">View and manage laundry shop customers and their accounts.</p>
+        </div>
+        <button class="btn-add-new" onclick="openCustomerModal()">
+            <i data-lucide="user-plus"></i>
+            New Customer
+        </button>
+    </div>
+
+    <div class="table-controls">
+        <div class="search-box">
+            <i data-lucide="search"></i>
+            <input type="text" class="search-input" placeholder="Search by name, phone or ID...">
+        </div>
+        <div class="filter-tabs">
+            <div class="filter-tab active">All</div>
+            <div class="filter-tab">Active</div>
+            <div class="filter-tab">New</div>
+            <div class="filter-tab">Inactive</div>
+        </div>
+    </div>
+
+    <div class="data-table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Customer ID</th>
+                    <th>Full Name</th>
+                    <th>Contact Number</th>
+                    <th>Joined Date</th>
+                    <th>Total Orders</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="text-center" style="padding: 40px; color: var(--text-muted); text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                            <i data-lucide="refresh-cw" class="animate-spin" style="width: 24px; height: 24px; opacity: 0.6; animation: spin 2s linear infinite;"></i>
+                            <span>Loading customers...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination-footer">
+        <p class="pagination-info">Showing 1 to 2 of 120 entries</p>
+        <div class="pagination-controls">
+            <button class="page-btn nav">Prev</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn nav">Next</button>
+        </div>
+    </div>
+</div>

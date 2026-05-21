@@ -1,0 +1,291 @@
+<div id="addOrderModal" class="modal-overlay">
+    <div class="modal-container">
+        <button class="modal-close" onclick="closeModal('addOrderModal')">
+            <i data-lucide="x"></i>
+        </button>
+
+        <!-- Step 1: Services & Add-ons -->
+        <div id="step1" class="modal-step active">
+            <div class="modal-body items-start">
+                <div class="services-column">
+                    <h2 class="modal-title">Services</h2>
+                    <div class="load-selector">
+                        <div class="load-info">
+                            <i data-lucide="weight" class="w-5 h-5"></i>
+                            <span>Load (in kg)</span>
+                        </div>
+                        <div class="counter">
+                            <button onclick="updateLoad(-1)">-</button>
+                            <span id="loadText">8</span>
+                            <button onclick="updateLoad(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="services-grid">
+                        <div class="service-select-card active" onclick="toggleService(this)">
+                            <i data-lucide="washing-machine" class="mx-auto"></i>
+                            <p class="service-name">Dry Wash</p>
+                            <p class="service-price">₱80.00</p>
+                        </div>
+                        <div class="service-select-card" onclick="toggleService(this)">
+                            <i data-lucide="shirt" class="mx-auto"></i>
+                            <p class="service-name">Fold</p>
+                            <p class="service-price">₱20.00</p>
+                        </div>
+                        <div class="service-select-card" onclick="toggleService(this)">
+                            <i data-lucide="iron" class="mx-auto"></i>
+                            <p class="service-name">Iron</p>
+                            <p class="service-price">₱40.00</p>
+                        </div>
+                        <div class="service-select-card" onclick="toggleService(this)">
+                            <i data-lucide="layers" class="mx-auto"></i>
+                            <p class="service-name">Separate Washing</p>
+                            <p class="service-price">₱50.00</p>
+                        </div>
+                        <div class="service-select-card" onclick="toggleService(this)">
+                            <i data-lucide="bed" class="mx-auto"></i>
+                            <p class="service-name">Comforter</p>
+                            <p class="service-price">₱120.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="addons-column">
+                    <h2 class="modal-title">Add-ons</h2>
+                    <div class="addons-list">
+                        <div class="addon-item">
+                            <i data-lucide="droplets" class="text-teal-500"></i>
+                            <div class="addon-info">
+                                <p class="addon-name">Fabric conditioner</p>
+                                <p class="addon-price">₱20.00</p>
+                            </div>
+                            <div class="counter mini">
+                                <button onclick="updateAddon('fabCon', -1)">-</button>
+                                <span id="fabConCount">2</span>
+                                <button onclick="updateAddon('fabCon', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="addon-item">
+                            <i data-lucide="sparkles" class="text-teal-500"></i>
+                            <div class="addon-info">
+                                <p class="addon-name">Detergent</p>
+                                <p class="addon-price">₱20.00</p>
+                            </div>
+                            <div class="counter mini">
+                                <button onclick="updateAddon('detergent', -1)">-</button>
+                                <span id="detergentCount">1</span>
+                                <button onclick="updateAddon('detergent', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="addon-item">
+                            <i data-lucide="droplet" class="text-teal-500"></i>
+                            <div class="addon-info">
+                                <p class="addon-name">Stain remover</p>
+                                <p class="addon-price">₱20.00</p>
+                            </div>
+                            <div class="counter mini">
+                                <button onclick="updateAddon('stain', -1)">-</button>
+                                <span id="stainCount">0</span>
+                                <button onclick="updateAddon('stain', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="addon-item">
+                            <i data-lucide="waves" class="text-teal-500"></i>
+                            <div class="addon-info">
+                                <p class="addon-name">Bleach</p>
+                                <p class="addon-price">₱15.00</p>
+                            </div>
+                            <div class="counter mini">
+                                <button onclick="updateAddon('bleach', -1)">-</button>
+                                <span id="bleachCount">0</span>
+                                <button onclick="updateAddon('bleach', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-clear" onclick="clearForm()">Clear All</button>
+                <div class="footer-actions">
+                    <button class="btn-cancel" onclick="closeOrderModal()">Cancel</button>
+                    <button class="btn-next" onclick="nextStep(2)">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Details -->
+        <div id="step2" class="modal-step">
+            <div class="modal-body details-layout">
+                <div class="details-section">
+                    <h2 class="modal-title">Customer Details</h2>
+                    <input type="text" id="custNameInput" placeholder="Name" class="modal-input" value="" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
+                    <input type="text" id="custContactInput" placeholder="Contact No. (e.g. 09123456789)" class="modal-input" value="" maxlength="11" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+
+                    <h2 class="modal-title mt-8">Handled by</h2>
+                    <div class="dropdown-container w-full!">
+                        <button class="modal-dropdown-trigger" onclick="toggleDropdown(this)">
+                            <span class="selected-value">Jennifer Daguplo</span>
+                            <i data-lucide="chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item" onclick="selectOption(this, 'Jennifer Daguplo')">Jennifer Daguplo
+                            </div>
+                            <div class="dropdown-item" onclick="selectOption(this, 'Sean Gabor')">Sean Gabor</div>
+                            <div class="dropdown-item" onclick="selectOption(this, 'Mike Ross')">Mike Ross</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h2 class="modal-title">Payment Details</h2>
+                    <div class="payment-row">
+                        <span>Payment Method</span>
+                        <div class="dropdown-container">
+                            <button class="modal-dropdown-trigger small" onclick="toggleDropdown(this)">
+                                <span class="selected-value">Cash</span>
+                                <i data-lucide="chevron-down"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item"
+                                    onclick="selectOption(this, 'Cash'); window.selectPaymentMethod('Cash')">Cash</div>
+                                <div class="dropdown-item"
+                                    onclick="selectOption(this, 'G-Cash'); window.selectPaymentMethod('G-Cash')">G-Cash
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="payment-row">
+                        <span>Amount Due</span>
+                        <div class="price-input" id="amountDueDisplay">₱160.00</div>
+                    </div>
+                    <div class="payment-row">
+                        <span>Payment Status</span>
+                        <div class="status-container">
+                            <span id="paymentStatusBadge" class="status-badge" data-status="Paid">Fully Paid</span>
+                        </div>
+                    </div>
+                    <div class="payment-row">
+                        <span>Amount Paid</span>
+                        <input type="text" id="amountPaidInput" class="modal-input-small" value="₱160.00"
+                            oninput="handleAmountPaidInput(this)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-clear" onclick="clearForm()">Clear All</button>
+                <div class="footer-actions">
+                    <button class="btn-cancel" onclick="closeOrderModal()">Cancel</button>
+                    <button class="btn-prev" onclick="nextStep(1)">Previous</button>
+                    <button class="btn-next" onclick="nextStep(3)">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Summary -->
+        <div id="step3" class="modal-step">
+            <div class="modal-body flex-col gap-0!">
+                <h2 class="modal-title">Order Summary</h2>
+                <div class="summary-banner" id="summaryOrderBanner"
+                    style="background: var(--primary-light); color: var(--primary-dark);">
+                    New Order
+                </div>
+
+                <div class="summary-grid">
+                    <div class="summary-table-container">
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th>Items</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-group-header">
+                                    <td colspan="4">Services</td>
+                                </tr>
+                                <tr>
+                                    <td>Dry Wash</td>
+                                    <td>₱80.00</td>
+                                    <td>8 kg</td>
+                                    <td>₱80.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Fold</td>
+                                    <td>₱20.00</td>
+                                    <td>8 kg</td>
+                                    <td>₱20.00</td>
+                                </tr>
+                                <tr class="table-group-header">
+                                    <td colspan="4">Add-ons</td>
+                                </tr>
+                                <tr>
+                                    <td>Fabric conditioner</td>
+                                    <td>₱20.00</td>
+                                    <td>2</td>
+                                    <td>₱40.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Detergent</td>
+                                    <td>₱20.00</td>
+                                    <td>1</td>
+                                    <td>₱20.00</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-total">
+                                    <td colspan="3">TOTAL</td>
+                                    <td>₱160.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="summary-details">
+                        <div class="summary-info-block">
+                            <div class="info-row">
+                                <span class="info-label">Customer:</span>
+                                <span class="info-tag">Sean Jric</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Contact No.:</span>
+                                <span class="info-tag">09380410694</span>
+                            </div>
+                        </div>
+                        <div class="summary-info-block">
+                            <div class="info-row">
+                                <span class="info-label">Handled by:</span>
+                                <span class="info-tag">Jennifer Daguplo</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Payment Status:</span>
+                                <span class="info-tag status-tag" id="summaryPaymentStatus">Fully Paid</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Amount Paid:</span>
+                                <span class="info-tag amount-tag" id="summaryAmountPaid">₱160.00</span>
+                            </div>
+                            <div class="info-row" id="summaryBalanceRow" style="display: none;">
+                                <span class="info-label">Remaining Balance:</span>
+                                <span class="info-tag" id="summaryBalance"
+                                    style="background: var(--pending-bg); color: var(--pending-text);">₱0.00</span>
+                            </div>
+                        </div>
+                        <div class="summary-timestamp">
+                            29 April 2026, Wednesday<br>
+                            7:32 PM
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="footer-actions ml-auto!">
+                    <button class="btn-cancel" onclick="closeOrderModal()">Cancel</button>
+                    <button class="btn-prev" onclick="nextStep(2)">Previous</button>
+                    <button class="btn-submit" onclick="submitOrder()">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

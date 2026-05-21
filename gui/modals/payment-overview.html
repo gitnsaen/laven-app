@@ -1,0 +1,38 @@
+<div id="paymentOverviewModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 400px; height: auto !important; min-height: 0 !important;">
+        <button class="modal-close" onclick="closeModal('paymentOverviewModal')">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-body details-layout-update" style="padding: 30px !important; padding-bottom: 30px !important;">
+            <div class="details-section" style="width: 100%; border-right: none; padding-right: 0;">
+                <div style="margin-bottom: 24px;">
+                    <h2 class="modal-title" style="font-size: 18px; margin-bottom: 2px;">Payment Overview</h2>
+                    <span id="overviewPaymentIdText" style="font-size: 11px; font-weight: 500; color: var(--text-muted); opacity: 0.8;">#PAY-0000</span>
+                </div>
+                
+                <div class="overview-group" style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="overview-row">
+                        <span class="overview-label">Order Ref</span>
+                        <span id="overviewOrderId" class="pill-value gray">#0000</span>
+                    </div>
+
+                    <div class="overview-row">
+                        <span class="overview-label">Method</span>
+                        <span id="overviewMethodBadge" class="status-badge" style="border-radius: 8px; font-size: 10px; padding: 4px 10px;">Cash</span>
+                    </div>
+                    
+                    <div class="overview-row">
+                        <span class="overview-label">Amount Paid</span>
+                        <span id="overviewAmountPaid" class="pill-value green" style="font-weight: 800;">₱0.00</span>
+                    </div>
+
+                    <div class="overview-row" style="border-top: 1px dashed var(--border-color); padding-top: 14px; margin-top: 6px;">
+                        <span class="overview-label">Date & Time</span>
+                        <span id="overviewDateTime" class="pill-value gray" style="font-size: 10px; text-align: right;">Date<br>Time</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

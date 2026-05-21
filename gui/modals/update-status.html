@@ -1,0 +1,101 @@
+<div id="updateStatusModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 760px; height: auto; max-height: 85vh;">
+        <button class="modal-close" onclick="closeModal('updateStatusModal')">
+            <i data-lucide="x"></i>
+        </button>
+
+        <div class="modal-body details-layout-update" style="padding: 40px !important; overflow: visible !important;">
+            <!-- Left Column: Payment Overview -->
+            <div class="details-section">
+                <div style="margin-bottom: 24px;">
+                    <h2 class="modal-title" style="font-size: 18px; margin-bottom: 2px;">Payment Overview</h2>
+                    <span id="updateOrderIdText" style="font-size: 11px; font-weight: 500; color: var(--text-muted); opacity: 0.8;">Order #10045</span>
+                </div>
+                
+                <div class="overview-group" style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="overview-row">
+                        <span class="overview-label">Payment Status</span>
+                        <span id="updatePaymentStatusBadge" class="status-badge" data-status="Partially Paid" style="border-radius: 8px; font-size: 10px; padding: 4px 10px;">Partially Paid</span>
+                    </div>
+                    
+                    <div class="overview-row">
+                        <span class="overview-label">Amount Due</span>
+                        <span id="updateAmountDue" class="pill-value gray">₱150.00</span>
+                    </div>
+
+                    <div class="overview-row">
+                        <span class="overview-label">Total Paid</span>
+                        <span id="updateAmountPaid" class="pill-value gray">₱120.00</span>
+                    </div>
+
+                    <div class="overview-row" id="updateBalanceRow" style="border-top: 1px dashed var(--border-color); padding-top: 14px; margin-top: 6px;">
+                        <span class="overview-label" style="color: var(--text-main); font-weight: 700;">Remaining Balance</span>
+                        <span id="updateBalance" class="pill-value red" style="font-weight: 800;">₱30.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Update Status (Highlighted Focus) -->
+            <div class="details-section status-highlight-box">
+                <h2 style="font-size: 16px; font-weight: 700; color: var(--primary-dark); margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i>
+                    Update Status
+                </h2>
+                
+                <!-- Order Status Section -->
+                <div id="updateProgressSection" class="form-group" style="margin-bottom: 28px;">
+                    <label class="modal-label" style="font-size: 12px; color: var(--text-heading); font-weight: 600; margin-bottom: 10px; display: block;">Update Progress</label>
+                    <div class="dropdown-container" style="width: 100%;">
+                        <button class="modal-dropdown-trigger status-pill-trigger" id="updateOrderStatusTrigger" onclick="toggleDropdown(this)" data-status="Pending" style="width: 100%; border-radius: 12px; height: 44px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+                            <span class="selected-value">Pending</span>
+                            <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                        </button>
+                        <div class="dropdown-menu" style="width: 100%;">
+                            <div class="dropdown-item" onclick="window.selectStatusAndColor(this, 'Pending')">Pending</div>
+                            <div class="dropdown-item" onclick="window.selectStatusAndColor(this, 'On Progress')">On Progress</div>
+                            <div class="dropdown-item" onclick="window.selectStatusAndColor(this, 'Done')">Ready for Pickup</div>
+                            <div class="dropdown-item" onclick="window.selectStatusAndColor(this, 'Claimed')">Claimed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Record Payment Section -->
+                <div id="addPaymentSection" class="form-group" style="margin-top: auto;">
+                    <label class="modal-label" style="font-size: 12px; color: var(--text-heading); font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="plus" style="width: 16px; height: 16px; color: var(--primary); stroke-width: 2.5;"></i>
+                        Record Payment
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="addPaymentInput" class="pill-input-green" placeholder="₱0.00" oninput="handleUpdatePaymentInput(this)" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46">
+                    </div>
+                    
+                    <div id="updatePaymentMethodSection" style="display: none; margin-top: 14px;">
+                        <label class="modal-label" style="font-size: 12px; color: var(--text-heading); font-weight: 600; margin-bottom: 8px; display: block;">Payment Method</label>
+                        <div class="dropdown-container" style="width: 100%;">
+                            <button class="modal-dropdown-trigger" id="updatePaymentMethodTrigger" onclick="toggleDropdown(this)" data-status="Cash" style="width: 100%; border-radius: 12px; height: 40px; border: 1px solid var(--border-color); background: #fff;">
+                                <span class="selected-value">Cash</span>
+                                <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                            </button>
+                            <div class="dropdown-menu" style="width: 100%;">
+                                <div class="dropdown-item" onclick="selectOption(this, 'Cash')">Cash</div>
+                                <div class="dropdown-item" onclick="selectOption(this, 'G-Cash')">G-Cash</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding: 0 4px;">
+                        <span class="overview-label" style="font-size: 11px; font-weight: 600;">Status Preview</span>
+                        <span id="newPaymentStatusPreview" style="color: var(--ready-text); font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Fully Paid</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer" style="padding: 24px 40px !important; background: var(--main-bg) !important;">
+            <div class="ml-auto! flex gap-3">
+                <button class="btn-cancel" onclick="closeModal('updateStatusModal')">Discard</button>
+                <button class="btn-submit" onclick="saveUpdateStatus()" style="min-width: 140px;">Confirm Changes</button>
+            </div>
+        </div>
+    </div>
+</div>

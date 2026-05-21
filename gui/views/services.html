@@ -1,0 +1,78 @@
+<div class="orders-management-wrapper">
+    <div class="view-header">
+        <div class="view-title-group">
+            <h2>Services & Add-ons</h2>
+            <p class="view-subtitle">Manage your laundry service offerings and available add-ons.</p>
+        </div>
+        <button class="btn-add-new admin-only-action" onclick="openServiceModal()">
+            <i data-lucide="plus"></i>
+            New Item
+        </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 18px;">
+        <!-- Services Section -->
+        <div class="section-container">
+            <div class="view-header" style="padding: 0; margin-bottom: 16px;">
+                <div class="view-title-group">
+                    <h3 style="font-size: 18px; font-weight: 600; color: var(--text-main);">Laundry Services</h3>
+                </div>
+            </div>
+    
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Service ID</th>
+                            <th>Service Name</th>
+                            <th>Price per Unit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="4" class="text-center" style="padding: 40px; color: var(--text-muted); text-align: center;">
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                    <i data-lucide="refresh-cw" class="animate-spin" style="width: 24px; height: 24px; opacity: 0.6; animation: spin 2s linear infinite;"></i>
+                                    <span>Loading services...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+        <!-- Add-ons Section -->
+        <div class="section-container">
+            <div class="view-header" style="padding: 0; margin-bottom: 16px;">
+                <div class="view-title-group">
+                    <h3 style="font-size: 18px; font-weight: 600; color: var(--text-main);">Available Add-ons</h3>
+                </div>
+            </div>
+    
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Add-on ID</th>
+                            <th>Add-on Name</th>
+                            <th>Price per Piece</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="4" class="text-center" style="padding: 40px; color: var(--text-muted); text-align: center;">
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                                    <i data-lucide="refresh-cw" class="animate-spin" style="width: 24px; height: 24px; opacity: 0.6; animation: spin 2s linear infinite;"></i>
+                                    <span>Loading add-ons...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
