@@ -40,12 +40,9 @@ jobs:
     - name: Install Python Dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        # Use a venv that inherits system site-packages so gi is visible
         python3 -m venv --system-site-packages .venv
         .venv/bin/pip install --upgrade pip
         .venv/bin/pip install pyinstaller pywebview
-        # Verify gi is accessible
-        .venv/bin/python -c "import gi; print('gi OK:', gi.__file__)"
 
     - name: Install Python Dependencies (Windows)
       if: matrix.os == 'windows-latest'
@@ -72,4 +69,50 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Laven-${{ matrix.os }}
+        path: dist/
+
+  build-arch:
+    name: Build Standalone Binary on Arch Linux
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies
+      run: |
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm \
+          python python-pip \
+          python-gobject \
+          webkit2gtk-4.1 \
+          gtk3 \
+          gobject-introspection \
+          cairo \
+          pkgconf \
+          gcc
+
+    - name: Install Python Dependencies
+      run: |
+        # Use venv with system site-packages so python-gobject is visible
+        python -m venv --system-site-packages .venv
+        .venv/bin/pip install --upgrade pip
+        .venv/bin/pip install pyinstaller pywebview
+        .venv/bin/python -c "import gi; print('gi OK:', gi.__file__)"
+
+    - name: Build Executable
+      run: |
+        .venv/bin/pyinstaller --noconsole --onefile --name "laven" \
+          --collect-all gi \
+          --collect-all webview \
+          --add-data "gui:gui" \
+          --add-data "database_schema.sql:." \
+          main.py
+
+    - name: Upload Arch Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Laven-arch-linux
         path: dist/
