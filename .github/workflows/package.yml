@@ -104,17 +104,25 @@ jobs:
 
     - name: Build Executable
       run: |
-        .venv/bin/pyinstaller --noconsole --onefile --name "laven" \
+        .venv/bin/pyinstaller --noconsole --name "laven" \
           --collect-all webview \
-          --exclude-module gi.repository.WebKit2 \
-          --exclude-module gi.repository.Gtk \
-          --exclude-module gi.repository.GLib \
+          --exclude-module gi \
           --add-data "gui:gui" \
           --add-data "database_schema.sql:." \
           main.py
+
+    - name: Create launcher and archive
+      run: |
+        cat > dist/laven/run.sh << 'EOF'
+        #!/bin/bash
+        DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        exec "$DIR/laven" "$@"
+        EOF
+        chmod +x dist/laven/run.sh
+        cd dist && tar -czf laven-arch.tar.gz laven/
 
     - name: Upload Arch Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Laven-arch-linux
-        path: dist/
+        path: dist/laven-arch.tar.gz
