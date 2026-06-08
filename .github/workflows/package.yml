@@ -20,7 +20,8 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Python
+    - name: Set up Python (Windows only)
+      if: matrix.os == 'windows-latest'
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
@@ -30,30 +31,27 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          python3 python3-pip python3-venv \
           python3-gi python3-gi-cairo \
           gir1.2-gtk-3.0 gir1.2-webkit2-4.1 \
-          libgirepository-1.0-dev \
           gcc libcairo2-dev pkg-config \
           gobject-introspection
 
-    - name: Install Python Dependencies
+    - name: Install Python Dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        # Use a venv that inherits system site-packages so gi is visible
+        python3 -m venv --system-site-packages .venv
+        .venv/bin/pip install --upgrade pip
+        .venv/bin/pip install pyinstaller pywebview
+        # Verify gi is accessible
+        .venv/bin/python -c "import gi; print('gi OK:', gi.__file__)"
+
+    - name: Install Python Dependencies (Windows)
+      if: matrix.os == 'windows-latest'
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller pywebview
-
-    - name: Install Python Dependencies (Linux gi link)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        SYS_GI=$(find /usr/lib/python3 -maxdepth 3 -name "gi" -type d | head -1)
-        echo "Found gi at: $SYS_GI"
-        SITE=$(python -c "import site; print(site.getsitepackages()[0])")
-        echo "Linking into: $SITE"
-        ln -sf "$SYS_GI" "$SITE/gi"
-        GI_SO=$(find /usr/lib/python3 -maxdepth 4 -name "_gi*.so" | head -1)
-        if [ -n "$GI_SO" ]; then
-          ln -sf "$GI_SO" "$SITE/$(basename $GI_SO)"
-        fi
-        python -c "import gi; print('gi OK:', gi.__file__)"
 
     - name: Build Executable (Windows)
       if: matrix.os == 'windows-latest'
@@ -63,7 +61,7 @@ jobs:
     - name: Build Executable (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        pyinstaller --noconsole --onefile --name "laven" \
+        .venv/bin/pyinstaller --noconsole --onefile --name "laven" \
           --collect-all gi \
           --collect-all webview \
           --add-data "gui:gui" \
