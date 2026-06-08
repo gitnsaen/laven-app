@@ -3,11 +3,14 @@
  * Handles employee listing, filtering, and CRUD operations
  */
 
+(() => {
 // Employee Management State
 let allEmployees = [];
 let filteredEmployees = [];
 let currentEmpPage = 1;
 const empRowsPerPage = 10;
+let empSortKey = 'employeeID';
+let empSortDirection = 'desc';
 
 async function loadEmployees() {
     try {
@@ -42,14 +45,55 @@ function applyEmployeeFilters() {
             contact.includes(term);
     });
 
+    // Sort the filtered employees
+    filteredEmployees.sort((a, b) => {
+        let valA = a[empSortKey];
+        let valB = b[empSortKey];
+
+        if (empSortKey === 'joinedDate') {
+            valA = valA ? new Date(valA) : new Date(0);
+            valB = valB ? new Date(valB) : new Date(0);
+        } else if (empSortKey === 'employeeID') {
+            valA = parseInt(valA) || 0;
+            valB = parseInt(valB) || 0;
+        } else if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = (valB || '').toLowerCase();
+        }
+
+        if (valA < valB) return empSortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return empSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
     currentEmpPage = 1;
     renderEmployeeTable();
 }
+
+window.handleEmployeeSort = (key) => {
+    if (empSortKey === key) {
+        empSortDirection = empSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        empSortKey = key;
+        empSortDirection = 'asc';
+    }
+    applyEmployeeFilters();
+};
 
 function renderEmployeeTable() {
     const tableBody = document.querySelector('.data-table tbody');
     const infoEl = document.querySelector('.pagination-info');
     if (!tableBody) return;
+
+    // Update sort icons in DOM
+    const sortIcons = document.querySelectorAll('.sort-icon');
+    sortIcons.forEach(icon => {
+        icon.textContent = '';
+    });
+    const activeIcon = document.getElementById(`sort-icon-${empSortKey}`);
+    if (activeIcon) {
+        activeIcon.textContent = empSortDirection === 'asc' ? ' ▲' : ' ▼';
+    }
 
     const total = filteredEmployees.length;
     const start = total === 0 ? 0 : (currentEmpPage - 1) * empRowsPerPage;
@@ -123,6 +167,57 @@ window.openEmployeeModal = async (id = null) => {
         const contactInput = document.getElementById('empContact');
         const titleEl = document.getElementById('employeeModalTitle');
 
+        // Clear warning states
+        const nameWarning = document.getElementById('empNameWarning');
+        const contactWarning = document.getElementById('empContactWarning');
+        if (nameWarning) {
+            nameWarning.style.display = 'none';
+            nameWarning.textContent = '';
+        }
+        if (contactWarning) {
+            contactWarning.style.display = 'none';
+            contactWarning.textContent = '';
+        }
+        if (fnameInput) {
+            fnameInput.style.borderColor = '';
+            fnameInput.classList.remove('input-error');
+        }
+        if (lnameInput) {
+            lnameInput.style.borderColor = '';
+            lnameInput.classList.remove('input-error');
+        }
+        if (contactInput) {
+            contactInput.style.borderColor = '';
+            contactInput.classList.remove('input-error');
+        }
+
+        // Attach inline validation listeners with debounce
+        const setupListeners = () => {
+            const debouncedCheck = window.debounce(() => {
+                const currentId = modal.getAttribute('data-editing-id') || null;
+                checkEmployeeDuplicates(
+                    fnameInput.value.trim(),
+                    lnameInput.value.trim(),
+                    contactInput.value.trim(),
+                    currentId
+                );
+            }, 500);
+
+            if (fnameInput && !fnameInput.dataset.dupCheckInitialized) {
+                fnameInput.addEventListener('input', debouncedCheck);
+                fnameInput.dataset.dupCheckInitialized = 'true';
+            }
+            if (lnameInput && !lnameInput.dataset.dupCheckInitialized) {
+                lnameInput.addEventListener('input', debouncedCheck);
+                lnameInput.dataset.dupCheckInitialized = 'true';
+            }
+            if (contactInput && !contactInput.dataset.dupCheckInitialized) {
+                contactInput.addEventListener('input', debouncedCheck);
+                contactInput.dataset.dupCheckInitialized = 'true';
+            }
+        };
+        setupListeners();
+
         if (id) {
             if (titleEl) titleEl.textContent = 'Edit Employee';
             const employee = allEmployees.find(emp => emp.employeeID == id);
@@ -144,6 +239,56 @@ window.openEmployeeModal = async (id = null) => {
     }
 };
 
+async function checkEmployeeDuplicates(fname, lname, phone, ignore_id) {
+    const fnameInput = document.getElementById('empFirstName');
+    const lnameInput = document.getElementById('empLastName');
+    const contactInput = document.getElementById('empContact');
+    const nameWarning = document.getElementById('empNameWarning');
+    const contactWarning = document.getElementById('empContactWarning');
+
+    if (!nameWarning || !contactWarning) return;
+
+    nameWarning.style.display = 'none';
+    nameWarning.textContent = '';
+    contactWarning.style.display = 'none';
+    contactWarning.textContent = '';
+
+    if (fnameInput) {
+        fnameInput.style.borderColor = '';
+        fnameInput.classList.remove('input-error');
+    }
+    if (lnameInput) {
+        lnameInput.style.borderColor = '';
+        lnameInput.classList.remove('input-error');
+    }
+    if (contactInput) {
+        contactInput.style.borderColor = '';
+        contactInput.classList.remove('input-error');
+    }
+
+    if (!fname && !lname && !phone) return;
+
+    try {
+        const check = await window.pywebview.api.check_employee_duplicate(fname, lname, phone, ignore_id || null);
+        if (check && check.status === 'success') {
+            if (check.name_match && fname.length > 0 && lname.length > 0) {
+                nameWarning.textContent = "An employee with this name already exists.";
+                nameWarning.style.display = "block";
+            }
+            if (check.phone_match && phone.length > 0) {
+                contactWarning.textContent = "This phone number is already registered. Please use a different number or update the existing profile.";
+                contactWarning.style.display = "block";
+                if (contactInput) {
+                    contactInput.style.borderColor = "#DC2626";
+                    contactInput.classList.add('input-error');
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Employee duplicate check error:", e);
+    }
+}
+
 window.closeEmployeeModal = () => {
     const modal = document.getElementById('employeeModal');
     if (modal) {
@@ -151,7 +296,29 @@ window.closeEmployeeModal = () => {
     }
 };
 
-window.saveEmployee = async () => {
+window.executeSaveEmployee = async (id, fname, mid, lname, contact) => {
+    try {
+        let response;
+        if (id) {
+            response = await window.pywebview.api.update_employee(id, fname, mid, lname, contact);
+        } else {
+            response = await window.pywebview.api.add_employee(fname, mid, lname, contact);
+        }
+
+        if (response.status === "success") {
+            window.showToast("Employee profile saved successfully!", "success");
+            window.closeEmployeeModal();
+            await loadEmployees();
+        } else {
+            window.showToast("Error: " + response.message, "error");
+        }
+    } catch (err) {
+        console.error("Execute Save Employee Failed:", err);
+        window.showToast("A system error occurred while saving.", "error");
+    }
+};
+
+window.saveEmployee = async (bypassNameCheck = false) => {
     const modal = document.getElementById('employeeModal');
     if (!modal) return;
 
@@ -185,20 +352,44 @@ window.saveEmployee = async () => {
     }
 
     try {
-        let response;
-        if (id) {
-            response = await window.pywebview.api.update_employee(id, fname, mid, lname, contact);
-        } else {
-            response = await window.pywebview.api.add_employee(fname, mid, lname, contact);
+        const check = await window.pywebview.api.check_employee_duplicate(fname, lname, contact, id || null);
+        if (check && check.status === "success") {
+            if (check.phone_match) {
+                // Block submission entirely
+                const contactWarning = document.getElementById('empContactWarning');
+                if (contactWarning) {
+                    contactWarning.textContent = "This phone number is already registered. Please use a different number or update the existing profile.";
+                    contactWarning.style.display = "block";
+                }
+                const contactInput = document.getElementById('empContact');
+                if (contactInput) {
+                    contactInput.style.borderColor = "#DC2626";
+                    contactInput.classList.add('input-error');
+                }
+                window.showToast("This phone number is already registered.", "error");
+                return;
+            }
+            if (check.name_match && !bypassNameCheck) {
+                // Pause submission and show confirmation modal
+                window.openDeleteConfirm({
+                    title: 'Duplicate Profile Found',
+                    message: `A profile for ${fname} ${lname} already exists in the system. Are you sure you want to create a new, separate profile?`,
+                    confirmText: 'Yes, Create',
+                    cancelText: 'Cancel',
+                    confirmClass: 'btn-confirm-dup',
+                    processingText: 'Saving...',
+                    icon: 'users',
+                    iconBg: 'var(--order-progress-bg)',
+                    iconColor: 'var(--order-progress-text)',
+                    onConfirm: async () => {
+                        await window.executeSaveEmployee(id, fname, mid, lname, contact);
+                    }
+                });
+                return;
+            }
         }
 
-        if (response.status === "success") {
-            window.showToast("Employee profile saved successfully!", "success");
-            window.closeEmployeeModal();
-            await loadEmployees();
-        } else {
-            window.showToast("Error: " + response.message, "error");
-        }
+        await window.executeSaveEmployee(id, fname, mid, lname, contact);
     } catch (err) {
         console.error("Save Employee Failed:", err);
         window.showToast("A system error occurred while saving.", "error");
@@ -233,3 +424,5 @@ Object.defineProperty(window, 'currentEmpPage', {
     get: () => currentEmpPage,
     set: (val) => { currentEmpPage = val; }
 });
+
+})();

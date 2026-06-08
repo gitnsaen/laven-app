@@ -2,6 +2,7 @@
  * laven - Dashboard Module
  */
 
+(() => {
 let dashboardClockInterval = null;
 
 async function loadDashboardData() {
@@ -247,3 +248,5 @@ window.updateDashboardCustomers = async (timeframe) => {
 };
 
 window.loadDashboardData = loadDashboardData;
+
+})();

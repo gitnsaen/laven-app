@@ -95,7 +95,12 @@ function toggleSidebar() {
  * Global Delete UI logic
  */
 async function openDeleteConfirm(config) {
-    const { title, message, onConfirm, confirmText, cancelText, confirmClass } = config;
+    const { title, message, onConfirm, confirmText, cancelText, confirmClass, icon, iconBg, iconColor } = config;
+    
+    // Capture the active modal ID before showing the confirmation overlay
+    const activeModal = document.querySelector('.modal-overlay.active');
+    const previouslyActiveModalId = activeModal ? activeModal.id : null;
+
     let modal = document.getElementById('deleteConfirmModal');
 
     // 1. Load modal if missing
@@ -115,9 +120,18 @@ async function openDeleteConfirm(config) {
         const msgEl = document.getElementById('deleteConfirmMessage');
         const confirmBtn = document.getElementById('deleteConfirmBtn');
         const cancelBtn = modal.querySelector('.btn-cancel');
+        const closeBtn = modal.querySelector('.modal-close');
+        const iconContainer = document.getElementById('deleteConfirmIconContainer');
 
         if (titleEl) titleEl.textContent = title || 'Confirm Delete';
         if (msgEl) msgEl.textContent = message || 'Are you sure you want to delete this entry?';
+
+        // Apply custom icon styles if provided, else fall back to red alert-triangle theme
+        if (iconContainer) {
+            iconContainer.style.background = iconBg || 'var(--pending-bg)';
+            iconContainer.style.color = iconColor || 'var(--danger)';
+            iconContainer.innerHTML = `<i id="deleteConfirmIcon" data-lucide="${icon || 'alert-triangle'}" style="width: 40px; height: 40px;"></i>`;
+        }
 
         if (confirmBtn) {
             confirmBtn.textContent = confirmText || 'Yes, Delete';
@@ -150,6 +164,21 @@ async function openDeleteConfirm(config) {
 
         if (cancelBtn) {
             cancelBtn.textContent = cancelText || 'Keep it';
+            cancelBtn.onclick = () => {
+                closeModal('deleteConfirmModal');
+                if (previouslyActiveModalId) {
+                    openModal(previouslyActiveModalId);
+                }
+            };
+        }
+
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                closeModal('deleteConfirmModal');
+                if (previouslyActiveModalId) {
+                    openModal(previouslyActiveModalId);
+                }
+            };
         }
 
         // 3. Open it
@@ -380,8 +409,8 @@ function applyRoleAccessRules(role) {
     navItems.forEach(item => {
         const clickAttr = item.getAttribute('onclick') || '';
 
-        // Hide Services, Employees, and Revenue tabs from Staff
-        if (clickAttr.includes("'services'") || clickAttr.includes("'employees'") || clickAttr.includes("'revenue'")) {
+        // Hide Services and Employees tabs from Staff
+        if (clickAttr.includes("'services'") || clickAttr.includes("'employees'")) {
             item.style.display = isAdmin ? 'flex' : 'none';
         }
     });
@@ -400,7 +429,7 @@ function applyRoleAccessRules(role) {
     }
 
     // If staff is currently viewing a restricted view, redirect them back to dashboard
-    if (!isAdmin && ['employees', 'services', 'revenue'].includes(window.currentView)) {
+    if (!isAdmin && ['employees', 'services'].includes(window.currentView)) {
         window.loadView('dashboard');
     }
 }
@@ -505,3 +534,49 @@ async function triggerDatabaseReset() {
 }
 
 window.triggerDatabaseReset = triggerDatabaseReset;
+
+window.formatPesosInput = (el) => {
+    if (!el) return;
+    let cursorPosition = el.selectionStart;
+    let originalLen = el.value.length;
+
+    // Get raw input digits and decimal point
+    let val = el.value.replace(/[^0-9.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = val.split('.');
+    if (parts.length > 2) {
+        val = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Prepend peso sign if there's any value
+    if (val.length > 0) {
+        el.value = '₱' + val;
+    } else {
+        el.value = '';
+    }
+
+    // Adjust cursor position to account for the prepended peso sign
+    let newLen = el.value.length;
+    let diff = newLen - originalLen;
+    if (el.matches(':focus')) {
+        el.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+    }
+};
+
+window.formatCurrency = (value) => {
+    const num = parseFloat(value);
+    if (isNaN(num)) return '';
+    return '₱' + num.toFixed(2);
+};
+
+window.debounce = (func, delay = 500) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func(...args);
+        }, delay);
+    };
+};
+

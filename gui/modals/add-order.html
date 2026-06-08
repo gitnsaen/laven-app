@@ -22,85 +22,14 @@
                     </div>
 
                     <div class="services-grid">
-                        <div class="service-select-card active" onclick="toggleService(this)">
-                            <i data-lucide="washing-machine" class="mx-auto"></i>
-                            <p class="service-name">Dry Wash</p>
-                            <p class="service-price">₱80.00</p>
-                        </div>
-                        <div class="service-select-card" onclick="toggleService(this)">
-                            <i data-lucide="shirt" class="mx-auto"></i>
-                            <p class="service-name">Fold</p>
-                            <p class="service-price">₱20.00</p>
-                        </div>
-                        <div class="service-select-card" onclick="toggleService(this)">
-                            <i data-lucide="iron" class="mx-auto"></i>
-                            <p class="service-name">Iron</p>
-                            <p class="service-price">₱40.00</p>
-                        </div>
-                        <div class="service-select-card" onclick="toggleService(this)">
-                            <i data-lucide="layers" class="mx-auto"></i>
-                            <p class="service-name">Separate Washing</p>
-                            <p class="service-price">₱50.00</p>
-                        </div>
-                        <div class="service-select-card" onclick="toggleService(this)">
-                            <i data-lucide="bed" class="mx-auto"></i>
-                            <p class="service-name">Comforter</p>
-                            <p class="service-price">₱120.00</p>
-                        </div>
+                        <!-- Dynamically populated -->
                     </div>
                 </div>
 
                 <div class="addons-column">
                     <h2 class="modal-title">Add-ons</h2>
                     <div class="addons-list">
-                        <div class="addon-item">
-                            <i data-lucide="droplets" class="text-teal-500"></i>
-                            <div class="addon-info">
-                                <p class="addon-name">Fabric conditioner</p>
-                                <p class="addon-price">₱20.00</p>
-                            </div>
-                            <div class="counter mini">
-                                <button onclick="updateAddon('fabCon', -1)">-</button>
-                                <span id="fabConCount">2</span>
-                                <button onclick="updateAddon('fabCon', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="addon-item">
-                            <i data-lucide="sparkles" class="text-teal-500"></i>
-                            <div class="addon-info">
-                                <p class="addon-name">Detergent</p>
-                                <p class="addon-price">₱20.00</p>
-                            </div>
-                            <div class="counter mini">
-                                <button onclick="updateAddon('detergent', -1)">-</button>
-                                <span id="detergentCount">1</span>
-                                <button onclick="updateAddon('detergent', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="addon-item">
-                            <i data-lucide="droplet" class="text-teal-500"></i>
-                            <div class="addon-info">
-                                <p class="addon-name">Stain remover</p>
-                                <p class="addon-price">₱20.00</p>
-                            </div>
-                            <div class="counter mini">
-                                <button onclick="updateAddon('stain', -1)">-</button>
-                                <span id="stainCount">0</span>
-                                <button onclick="updateAddon('stain', 1)">+</button>
-                            </div>
-                        </div>
-                        <div class="addon-item">
-                            <i data-lucide="waves" class="text-teal-500"></i>
-                            <div class="addon-info">
-                                <p class="addon-name">Bleach</p>
-                                <p class="addon-price">₱15.00</p>
-                            </div>
-                            <div class="counter mini">
-                                <button onclick="updateAddon('bleach', -1)">-</button>
-                                <span id="bleachCount">0</span>
-                                <button onclick="updateAddon('bleach', 1)">+</button>
-                            </div>
-                        </div>
+                        <!-- Dynamically populated -->
                     </div>
                 </div>
             </div>
@@ -118,21 +47,31 @@
             <div class="modal-body details-layout">
                 <div class="details-section">
                     <h2 class="modal-title">Customer Details</h2>
-                    <input type="text" id="custNameInput" placeholder="Name" class="modal-input" value="" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
-                    <input type="text" id="custContactInput" placeholder="Contact No. (e.g. 09123456789)" class="modal-input" value="" maxlength="11" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                    <div class="autocomplete-container" style="position: relative; width: 100%; margin-bottom: 8px;">
+                        <input type="text" id="custNameInput" placeholder="Name" class="modal-input" value="" onkeypress="return (event.charCode < 48 || event.charCode > 57)" autocomplete="off" style="margin-bottom: 0px;">
+                        <span id="orderCustNameWarning" style="color: #D97706; font-size: 11px; display: none; margin-top: 4px; font-weight: 500;"></span>
+                        <div id="custSuggestions" class="suggestions-list" style="display: none;"></div>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <input type="text" id="custContactInput" placeholder="Contact No. (e.g. 09123456789)" class="modal-input" value="" maxlength="11" oninput="window.handleContactInput(this)" onblur="window.handleContactBlur(this)" onkeypress="return event.charCode >= 48 && event.charCode <= 57" style="margin-bottom: 0px; width: 100%;">
+                        <div id="custContactError" style="display: none; color: #DC2626; font-size: 11px; font-weight: 600; margin-top: 4px; text-align: left; padding-left: 4px;">
+                            Must start with 09 and contain exactly 11 digits.
+                        </div>
+                        <span id="orderCustPhoneWarning" style="color: #DC2626; font-size: 11px; display: none; margin-top: 4px; font-weight: 500; padding-left: 4px;"></span>
+                    </div>
 
                     <h2 class="modal-title mt-8">Handled by</h2>
                     <div class="dropdown-container w-full!">
                         <button class="modal-dropdown-trigger" onclick="toggleDropdown(this)">
-                            <span class="selected-value">Jennifer Daguplo</span>
+                            <span class="selected-value">Select Employee</span>
                             <i data-lucide="chevron-down"></i>
                         </button>
                         <div class="dropdown-menu">
-                            <div class="dropdown-item" onclick="selectOption(this, 'Jennifer Daguplo')">Jennifer Daguplo
-                            </div>
-                            <div class="dropdown-item" onclick="selectOption(this, 'Sean Gabor')">Sean Gabor</div>
-                            <div class="dropdown-item" onclick="selectOption(this, 'Mike Ross')">Mike Ross</div>
+                            <!-- Dynamically populated -->
                         </div>
+                    </div>
+                    <div id="noEmployeesWarning" style="display: none; color: #DC2626; font-size: 11px; font-weight: 600; margin-top: 6px; text-align: left; padding-left: 4px;">
+                        You need to add an employee in the Employees tab first.
                     </div>
                 </div>
 
@@ -156,18 +95,30 @@
                     </div>
                     <div class="payment-row">
                         <span>Amount Due</span>
-                        <div class="price-input" id="amountDueDisplay">₱160.00</div>
+                        <div class="price-input" id="amountDueDisplay">₱0.00</div>
                     </div>
                     <div class="payment-row">
                         <span>Payment Status</span>
                         <div class="status-container">
-                            <span id="paymentStatusBadge" class="status-badge" data-status="Paid">Fully Paid</span>
+                            <span id="paymentStatusBadge" class="status-badge payment-badge" data-status="Unpaid">Unpaid</span>
                         </div>
                     </div>
-                    <div class="payment-row">
-                        <span>Amount Paid</span>
-                        <input type="text" id="amountPaidInput" class="modal-input-small" value="₱160.00"
-                            oninput="handleAmountPaidInput(this)">
+                    <div class="payment-row" style="align-items: flex-start;">
+                        <span style="margin-top: 10px;">Amount Paid</span>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                            <div style="position: relative; display: inline-block; min-width: 150px;">
+                                <input type="text" id="amountPaidInput" class="modal-input-small edit-active-input" placeholder="₱0.00" value="₱0.00" oninput="handleAmountPaidInput(this)" style="padding-right: 32px; width: 100%;">
+                                <i data-lucide="edit-2" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; color: var(--primary); pointer-events: none; opacity: 0.8;"></i>
+                            </div>
+                            <div id="addOrderPaymentError" style="display: none; color: #DC2626; font-size: 11px; font-weight: 600; margin-top: 4px; text-align: right;">
+                                Cannot exceed amount due.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border-color); line-height: 1.4; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+                        <i data-lucide="info" style="width: 14px; height: 14px; color: var(--primary); flex-shrink: 0;"></i>
+                        <span>Edit <strong>Amount Paid</strong> to automatically calculate payment status.</span>
                     </div>
                 </div>
             </div>
@@ -187,7 +138,7 @@
                 <h2 class="modal-title">Order Summary</h2>
                 <div class="summary-banner" id="summaryOrderBanner"
                     style="background: var(--primary-light); color: var(--primary-dark);">
-                    New Order
+                    Order #----
                 </div>
 
                 <div class="summary-grid">
@@ -202,41 +153,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="table-group-header">
-                                    <td colspan="4">Services</td>
-                                </tr>
-                                <tr>
-                                    <td>Dry Wash</td>
-                                    <td>₱80.00</td>
-                                    <td>8 kg</td>
-                                    <td>₱80.00</td>
-                                </tr>
-                                <tr>
-                                    <td>Fold</td>
-                                    <td>₱20.00</td>
-                                    <td>8 kg</td>
-                                    <td>₱20.00</td>
-                                </tr>
-                                <tr class="table-group-header">
-                                    <td colspan="4">Add-ons</td>
-                                </tr>
-                                <tr>
-                                    <td>Fabric conditioner</td>
-                                    <td>₱20.00</td>
-                                    <td>2</td>
-                                    <td>₱40.00</td>
-                                </tr>
-                                <tr>
-                                    <td>Detergent</td>
-                                    <td>₱20.00</td>
-                                    <td>1</td>
-                                    <td>₱20.00</td>
-                                </tr>
+                                <!-- Dynamically populated -->
                             </tbody>
                             <tfoot>
                                 <tr class="table-total">
                                     <td colspan="3">TOTAL</td>
-                                    <td>₱160.00</td>
+                                    <td>₱0.00</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -246,25 +168,25 @@
                         <div class="summary-info-block">
                             <div class="info-row">
                                 <span class="info-label">Customer:</span>
-                                <span class="info-tag">Sean Jric</span>
+                                <span class="info-tag">N/A</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Contact No.:</span>
-                                <span class="info-tag">09380410694</span>
+                                <span class="info-tag">N/A</span>
                             </div>
                         </div>
                         <div class="summary-info-block">
                             <div class="info-row">
                                 <span class="info-label">Handled by:</span>
-                                <span class="info-tag">Jennifer Daguplo</span>
+                                <span class="info-tag">N/A</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Payment Status:</span>
-                                <span class="info-tag status-tag" id="summaryPaymentStatus">Fully Paid</span>
+                                <span class="info-tag status-tag" id="summaryPaymentStatus">Unpaid</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Amount Paid:</span>
-                                <span class="info-tag amount-tag" id="summaryAmountPaid">₱160.00</span>
+                                <span class="info-tag amount-tag" id="summaryAmountPaid">₱0.00</span>
                             </div>
                             <div class="info-row" id="summaryBalanceRow" style="display: none;">
                                 <span class="info-label">Remaining Balance:</span>
@@ -273,8 +195,7 @@
                             </div>
                         </div>
                         <div class="summary-timestamp">
-                            29 April 2026, Wednesday<br>
-                            7:32 PM
+                            --:--
                         </div>
                     </div>
                 </div>

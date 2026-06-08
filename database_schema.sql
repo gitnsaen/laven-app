@@ -35,7 +35,7 @@ CREATE TABLE LaundryOrder(
      datePlaced TEXT DEFAULT (datetime('now', 'localtime')) NOT NULL,
      dateClaimed TEXT, 
      LaundryOrderStatus TEXT CHECK(LaundryOrderStatus IN ('Pending', 'On Progress', 'Done', 'Claimed', 'Cancelled')) NOT NULL DEFAULT 'Pending',
-     paymentStatus TEXT CHECK(paymentStatus IN ('Paid', 'Unpaid', 'Partially Paid', 'Overdue')) NOT NULL DEFAULT 'Unpaid',
+     paymentStatus TEXT CHECK(paymentStatus IN ('Paid', 'Unpaid', 'Partially Paid')) NOT NULL DEFAULT 'Unpaid',
      FOREIGN KEY (customerID) REFERENCES Customer(customerID) ON DELETE CASCADE ON UPDATE CASCADE,
      FOREIGN KEY (employeeID) REFERENCES Employee(employeeID) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -47,6 +47,7 @@ CREATE TABLE Payment (
     method TEXT CHECK(method IN ('Cash', 'G-Cash')) NOT NULL,  
     amount REAL NOT NULL,
     paymentDate TEXT DEFAULT (datetime('now', 'localtime')) NOT NULL, 
+    status TEXT CHECK(status IN ('Completed', 'Cancelled')) NOT NULL DEFAULT 'Completed',
     
     FOREIGN KEY (customerID) REFERENCES Customer(customerID),
     FOREIGN KEY (orderID) REFERENCES LaundryOrder(LaundryOrderID) ON DELETE CASCADE ON UPDATE CASCADE

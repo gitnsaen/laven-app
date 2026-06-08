@@ -23,6 +23,11 @@ async function loadView(viewName, element = null) {
         }
     }
 
+    // Reset orderFilter to 'All' when explicitly navigating via sidebar click
+    if (viewName === 'orders' && element) {
+        window.orderFilter = 'All';
+    }
+
     try {
         const response = await fetch(`views/${viewName}.html`);
         if (!response.ok) throw new Error(`Could not load view: ${viewName}`);

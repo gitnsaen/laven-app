@@ -2,8 +2,8 @@
     <div class="dashboard-header">
         <h2 class="page-title">Dashboard</h2>
         <div class="time-widget">
-            <span class="date" id="currentDate">27 Apr 2026, Tuesday</span>
-            <span class="time" id="currentTime">8:34 PM</span>
+            <span class="date" id="currentDate">-- -- ----</span>
+            <span class="time" id="currentTime">--:-- --</span>
         </div>
     </div>
 
@@ -11,7 +11,7 @@
     <section class="orders-section">
         <div class="section-header">
             <h3 class="section-title">Orders</h3>
-            <a href="#" class="view-all" onclick="loadView('orders')">View all</a>
+            <a href="#" class="view-all" onclick="window.orderFilter = 'All'; loadView('orders')">View all</a>
         </div>
 
         <div class="orders-layout">
@@ -28,72 +28,9 @@
 
                 <div class="orders-scroll-container" id="ordersScroll">
                     <div class="orders-list">
-                        <div class="order-card" onclick="openViewOrderModal('00123')">
-                            <div class="card-header">
-                                <span class="order-id">00123</span>
-                                <span class="status-badge pending">Pending</span>
-                            </div>
-                            <div class="card-body">
-                                <span class="order-date">27 Apr 2026</span>
-                                <h4 class="customer-name">John Doe</h4>
-                                <div class="card-footer">
-                                    <p class="service-details">Dry, Wash, Fold</p>
-                                    <p class="order-price">₱120.00</p>
-                                </div>
-                                <button class="update-btn"
-                                    onclick="event.stopPropagation(); openUpdateStatusModal('00123')">Update</button>
-                            </div>
-                        </div>
-
-                        <div class="order-card" onclick="openViewOrderModal('00124')">
-                            <div class="card-header">
-                                <span class="order-id">00123</span>
-                                <span class="status-badge progress">On Progress</span>
-                            </div>
-                            <div class="card-body">
-                                <span class="order-date">27 Apr 2026</span>
-                                <h4 class="customer-name">John Doe</h4>
-                                <div class="card-footer">
-                                    <p class="service-details">Dry, Wash, Fold</p>
-                                    <p class="order-price">₱120.00</p>
-                                </div>
-                                <button class="update-btn"
-                                    onclick="event.stopPropagation(); openUpdateStatusModal('00124')">Update</button>
-                            </div>
-                        </div>
-
-                        <div class="order-card" onclick="openViewOrderModal('00125')">
-                            <div class="card-header">
-                                <span class="order-id">00123</span>
-                                <span class="status-badge pending">Pending</span>
-                            </div>
-                            <div class="card-body">
-                                <span class="order-date">27 Apr 2026</span>
-                                <h4 class="customer-name">Jane Smith</h4>
-                                <div class="card-footer">
-                                    <p class="service-details">Wash & Iron</p>
-                                    <p class="order-price">₱150.00</p>
-                                </div>
-                                <button class="update-btn"
-                                    onclick="event.stopPropagation(); openUpdateStatusModal('00125')">Update</button>
-                            </div>
-                        </div>
-
-                        <div class="order-card" onclick="openViewOrderModal('00126')">
-                            <div class="card-header">
-                                <span class="order-id">00123</span>
-                                <span class="status-badge progress">On Progress</span>
-                            </div>
-                            <div class="card-body">
-                                <span class="order-date">27 Apr 2026</span>
-                                <h4 class="customer-name">Mike Ross</h4>
-                                <div class="card-footer">
-                                    <p class="service-details">Dry Clean</p>
-                                    <p class="order-price">₱200.00</p>
-                                </div>
-                                <button class="update-btn"
-                                    onclick="event.stopPropagation(); openUpdateStatusModal('00126')">Update</button>
-                            </div>
+                        <div style="padding: 40px; color: var(--text-muted); text-align: center; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <i data-lucide="refresh-cw" class="animate-spin" style="width: 20px; height: 20px; opacity: 0.6;"></i>
+                            <span>Loading recent orders...</span>
                         </div>
                     </div>
                 </div>
@@ -127,7 +64,7 @@
                     </div>
                 </div>
                 <div class="metric-value">
-                    <span id="revenue-value">₱1,234.34</span>
+                    <span id="revenue-value">₱0.00</span>
                     <button class="toggle-visibility" onclick="toggleValueVisibility('revenue-value', this)">
                         <i data-lucide="eye" class="eye-open hidden"></i>
                         <i data-lucide="eye-off" class="eye-closed"></i>
@@ -152,7 +89,7 @@
                     </div>
                 </div>
                 <div class="metric-value">
-                    <span id="unpaid-value">₱1,234.34</span>
+                    <span id="unpaid-value">₱0.00</span>
                     <button class="toggle-visibility" onclick="toggleValueVisibility('unpaid-value', this)">
                         <i data-lucide="eye" class="eye-open hidden"></i>
                         <i data-lucide="eye-off" class="eye-closed"></i>
@@ -165,9 +102,9 @@
         <div class="status-card">
             <div class="section-header" style="margin-bottom: 24px;">
                 <h3 class="section-title" style="color: var(--text-main); font-size: 14px;">Status Summary</h3>
-                <a href="#" class="view-all" onclick="loadView('orders')">View all</a>
+                <a href="#" class="view-all" onclick="window.orderFilter = 'All'; loadView('orders')">View all</a>
             </div>
-            <div class="mini-stat">
+            <div class="mini-stat" onclick="window.orderFilter = 'Pending'; window.loadView('orders');" style="cursor: pointer;">
                 <div class="stat-icon red">
                     <i data-lucide="clock"></i>
                 </div>
@@ -176,7 +113,7 @@
                     <span class="stat-count" id="pending-count">0</span>
                 </div>
             </div>
-            <div class="mini-stat">
+            <div class="mini-stat" onclick="window.orderFilter = 'On Progress'; window.loadView('orders');" style="cursor: pointer;">
                 <div class="stat-icon orange">
                     <i data-lucide="refresh-cw"></i>
                 </div>
@@ -185,7 +122,7 @@
                     <span class="stat-count" id="progress-count">0</span>
                 </div>
             </div>
-            <div class="mini-stat">
+            <div class="mini-stat" onclick="window.orderFilter = 'Done'; window.loadView('orders');" style="cursor: pointer;">
                 <div class="stat-icon green">
                     <i data-lucide="package"></i>
                 </div>

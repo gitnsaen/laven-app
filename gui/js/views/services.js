@@ -3,11 +3,16 @@
  * Handles services and addons listing and management
  */
 
+(() => {
 // Global State
 let allServices = [];
 let allAddons = [];
 let currentEditItemId = null;
 let currentEditItemType = null; // 'service' or 'addon'
+let serviceSortKey = 'serviceID';
+let serviceSortDirection = 'asc';
+let addonSortKey = 'addonID';
+let addonSortDirection = 'asc';
 
 /**
  * Task 2: Fetch and Display Logic
@@ -34,14 +39,34 @@ async function loadServicesAndAddons() {
 }
 
 function renderServicesTable() {
-    // Select the FIRST .data-table tbody in the DOM
     const tables = document.querySelectorAll('.data-table');
     if (tables.length === 0) return;
 
     const tbody = tables[0].querySelector('tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = allServices.map(s => `
+    // Sort the services array
+    const sortedServices = [...allServices].sort((a, b) => {
+        let valA = a[serviceSortKey];
+        let valB = b[serviceSortKey];
+
+        if (serviceSortKey === 'serviceID') {
+            valA = parseInt(valA) || 0;
+            valB = parseInt(valB) || 0;
+        } else if (serviceSortKey === 'price') {
+            valA = parseFloat(valA) || 0;
+            valB = parseFloat(b.price) || 0;
+        } else if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = (valB || '').toLowerCase();
+        }
+
+        if (valA < valB) return serviceSortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return serviceSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    tbody.innerHTML = sortedServices.map(s => `
         <tr>
             <td class="id-cell">#S-${s.serviceID}</td>
             <td>${s.serviceName}</td>
@@ -57,18 +82,48 @@ function renderServicesTable() {
         </tr>
     `).join('');
 
+    // Update sort icons in the Laundry Services header
+    const headers = tables[0].querySelectorAll('thead th .sort-icon');
+    headers.forEach(icon => {
+        icon.textContent = '';
+    });
+    const activeIcon = tables[0].querySelector(`#sort-icon-service-${serviceSortKey}`);
+    if (activeIcon) {
+        activeIcon.textContent = serviceSortDirection === 'asc' ? ' ▲' : ' ▼';
+    }
+
     if (window.lucide) window.lucide.createIcons();
 }
 
 function renderAddonsTable() {
-    // Select the SECOND .data-table tbody
     const tables = document.querySelectorAll('.data-table');
     if (tables.length < 2) return;
 
     const tbody = tables[1].querySelector('tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = allAddons.map(a => `
+    // Sort the addons array
+    const sortedAddons = [...allAddons].sort((a, b) => {
+        let valA = a[addonSortKey];
+        let valB = b[addonSortKey];
+
+        if (addonSortKey === 'addonID') {
+            valA = parseInt(valA) || 0;
+            valB = parseInt(valB) || 0;
+        } else if (addonSortKey === 'price') {
+            valA = parseFloat(valA) || 0;
+            valB = parseFloat(valB) || 0;
+        } else if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = (valB || '').toLowerCase();
+        }
+
+        if (valA < valB) return addonSortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return addonSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    tbody.innerHTML = sortedAddons.map(a => `
         <tr>
             <td class="id-cell">#A-${a.addonID}</td>
             <td>${a.addonName}</td>
@@ -84,8 +139,38 @@ function renderAddonsTable() {
         </tr>
     `).join('');
 
+    // Update sort icons in the Available Add-ons header
+    const headers = tables[1].querySelectorAll('thead th .sort-icon');
+    headers.forEach(icon => {
+        icon.textContent = '';
+    });
+    const activeIcon = tables[1].querySelector(`#sort-icon-addon-${addonSortKey}`);
+    if (activeIcon) {
+        activeIcon.textContent = addonSortDirection === 'asc' ? ' ▲' : ' ▼';
+    }
+
     if (window.lucide) window.lucide.createIcons();
 }
+
+window.handleServiceSort = (key) => {
+    if (serviceSortKey === key) {
+        serviceSortDirection = serviceSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        serviceSortKey = key;
+        serviceSortDirection = 'asc';
+    }
+    renderServicesTable();
+};
+
+window.handleAddonSort = (key) => {
+    if (addonSortKey === key) {
+        addonSortDirection = addonSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        addonSortKey = key;
+        addonSortDirection = 'asc';
+    }
+    renderAddonsTable();
+};
 
 // Task 3: Unified Modal Logic
 window.selectItemType = (item, value) => {
@@ -136,10 +221,10 @@ window.openServiceModal = async (id = null) => {
         const item = allServices.find(s => s.serviceID == id);
         if (item) {
             if (nameInput) nameInput.value = item.serviceName;
-            if (priceInput) priceInput.value = item.price;
+            if (priceInput) priceInput.value = window.formatCurrency(item.price);
         }
     } else {
-        if (titleEl) titleEl.textContent = 'Add New Service';
+        if (titleEl) titleEl.textContent = 'Add New Item';
         if (nameInput) nameInput.value = '';
         if (priceInput) priceInput.value = '';
     }
@@ -179,7 +264,7 @@ window.openAddonModal = async (id = null) => {
         const item = allAddons.find(a => a.addonID == id);
         if (item) {
             if (nameInput) nameInput.value = item.addonName;
-            if (priceInput) priceInput.value = item.price;
+            if (priceInput) priceInput.value = window.formatCurrency(item.price);
         }
     } else {
         if (titleEl) titleEl.textContent = 'Add New Add-on';
@@ -226,7 +311,7 @@ window.saveNewItem = async () => {
         return;
     }
 
-    const price = parseFloat(priceRaw);
+    const price = parseFloat(priceRaw.replace(/[^0-9.]/g, ''));
 
     try {
         let response;
@@ -310,3 +395,5 @@ window.handleAddonDelete = async (event, id) => {
 
 // Global Bindings
 window.loadServicesAndAddons = loadServicesAndAddons;
+
+})();

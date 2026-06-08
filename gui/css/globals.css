@@ -29,6 +29,31 @@
     --claimed-bg: #EBF5FF;
     --claimed-text: #3B82F6;
 
+    /* Differentiated Payment Status Colors (Improvised financial ledger theme: Red, Ochre, Teal) */
+    --payment-unpaid-bg: #FEF2F2;
+    --payment-unpaid-text: #EF4444;
+    --payment-unpaid-border: #FCA5A5;
+
+    --payment-partial-bg: #FFFBEB;
+    --payment-partial-text: #D97706;
+    --payment-partial-border: #FDE68A;
+
+    --payment-paid-bg: #F0FDFA;
+    --payment-paid-text: #0D9488;
+    --payment-paid-border: #99F6E4;
+
+    /* Differentiated Order Status Colors (Workflow theme: Red, Orange, Green, Blue, Gray) */
+    --order-pending-bg: #FEF2F2;
+    --order-pending-text: #EF4444;
+    --order-progress-bg: #FFF7ED;
+    --order-progress-text: #F97316;
+    --order-ready-bg: #ECFDF5;
+    --order-ready-text: #10B981;
+    --order-claimed-bg: #EFF6FF;
+    --order-claimed-text: #3B82F6;
+    --order-cancelled-bg: #F1F5F9;
+    --order-cancelled-text: #64748B;
+
     /* Functional Colors */
     --danger: #FF4D4D;
     --danger-light: #FEF2F2;
@@ -233,4 +258,13 @@ body.role-staff .admin-only-action {
 
 .dropdown-item:not(:last-child) {
     border-bottom: 1px solid var(--border-color);
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.spin, .animate-spin {
+    display: inline-block;
+    animation: spin 1.5s linear infinite;
 }

@@ -23,9 +23,9 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Service ID</th>
-                            <th>Service Name</th>
-                            <th>Price per Unit</th>
+                            <th onclick="window.handleServiceSort('serviceID')" style="cursor: pointer;">Service ID <span id="sort-icon-service-serviceID" class="sort-icon"></span></th>
+                            <th onclick="window.handleServiceSort('serviceName')" style="cursor: pointer;">Service Name <span id="sort-icon-service-serviceName" class="sort-icon"></span></th>
+                            <th onclick="window.handleServiceSort('price')" style="cursor: pointer;">Price per Unit <span id="sort-icon-service-price" class="sort-icon"></span></th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -55,9 +55,9 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Add-on ID</th>
-                            <th>Add-on Name</th>
-                            <th>Price per Piece</th>
+                            <th onclick="window.handleAddonSort('addonID')" style="cursor: pointer;">Add-on ID <span id="sort-icon-addon-addonID" class="sort-icon"></span></th>
+                            <th onclick="window.handleAddonSort('addonName')" style="cursor: pointer;">Add-on Name <span id="sort-icon-addon-addonName" class="sort-icon"></span></th>
+                            <th onclick="window.handleAddonSort('price')" style="cursor: pointer;">Price per Piece <span id="sort-icon-addon-price" class="sort-icon"></span></th>
                             <th>Actions</th>
                         </tr>
                     </thead>

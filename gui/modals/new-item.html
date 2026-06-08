@@ -30,7 +30,10 @@
 
                     <div class="form-group mb-4!">
                         <label class="text-sm! text-gray-500! mb-1! block" id="itemPriceLabel">Price per Unit (₱)</label>
-                        <input type="number" step="0.01" min="0" placeholder="0.00" class="modal-input" id="itemPrice" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46">
+                        <div style="position: relative; width: 100%;">
+                            <input type="text" placeholder="₱0.00" class="modal-input edit-active-input" id="itemPrice" oninput="window.formatPesosInput(this)" onkeypress="return (event.charCode >= 48 && event.charCode <= 57) || event.charCode === 46" style="padding-right: 36px; margin-bottom: 0 !important;">
+                            <i data-lucide="edit-2" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--primary); pointer-events: none; opacity: 0.8;"></i>
+                        </div>
                     </div>
                 </div>
             </div>

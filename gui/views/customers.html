@@ -27,11 +27,11 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Customer ID</th>
-                    <th>Full Name</th>
-                    <th>Contact Number</th>
-                    <th>Joined Date</th>
-                    <th>Total Orders</th>
+                    <th onclick="window.handleCustomerSort('customerID')" style="cursor: pointer;">Customer ID <span id="sort-icon-customerID" class="sort-icon"></span></th>
+                    <th onclick="window.handleCustomerSort('customerName')" style="cursor: pointer;">Full Name <span id="sort-icon-customerName" class="sort-icon"></span></th>
+                    <th onclick="window.handleCustomerSort('contactNum')" style="cursor: pointer;">Contact Number <span id="sort-icon-contactNum" class="sort-icon"></span></th>
+                    <th onclick="window.handleCustomerSort('joinedDate')" style="cursor: pointer;">Joined Date <span id="sort-icon-joinedDate" class="sort-icon"></span></th>
+                    <th onclick="window.handleCustomerSort('totalOrders')" style="cursor: pointer;">Total Orders <span id="sort-icon-totalOrders" class="sort-icon"></span></th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -50,12 +50,7 @@
     </div>
 
     <div class="pagination-footer">
-        <p class="pagination-info">Showing 1 to 2 of 120 entries</p>
-        <div class="pagination-controls">
-            <button class="page-btn nav">Prev</button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn nav">Next</button>
-        </div>
+        <p class="pagination-info"></p>
+        <div class="pagination-controls"></div>
     </div>
 </div>

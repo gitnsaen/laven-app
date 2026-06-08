@@ -3,12 +3,15 @@
  * Handles customer listing, filtering, and CRUD operations
  */
 
+(() => {
 // Customer Management State
 let allCustomers = [];
 let filteredCustomers = [];
 let currentPage = 1;
 const rowsPerPage = 15;
 let customerFilter = 'All';
+let customerSortKey = 'customerID';
+let customerSortDirection = 'desc';
 
 async function loadCustomers() {
     try {
@@ -55,9 +58,40 @@ function applyFiltersAndSearch() {
         return matchesTab && matchesSearch;
     });
 
+    // Sort the filtered customers
+    filteredCustomers.sort((a, b) => {
+        let valA = a[customerSortKey];
+        let valB = b[customerSortKey];
+
+        if (customerSortKey === 'joinedDate') {
+            valA = valA ? new Date(valA) : new Date(0);
+            valB = valB ? new Date(valB) : new Date(0);
+        } else if (customerSortKey === 'customerID' || customerSortKey === 'totalOrders') {
+            valA = parseInt(valA) || 0;
+            valB = parseInt(valB) || 0;
+        } else if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = (valB || '').toLowerCase();
+        }
+
+        if (valA < valB) return customerSortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return customerSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
     currentPage = 1; // Reset to page 1 on search/filter
     renderCustomerTable();
 }
+
+window.handleCustomerSort = (key) => {
+    if (customerSortKey === key) {
+        customerSortDirection = customerSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        customerSortKey = key;
+        customerSortDirection = 'asc';
+    }
+    applyFiltersAndSearch();
+};
 
 /**
  * Slices the filtered array and injects HTML
@@ -66,6 +100,16 @@ function renderCustomerTable() {
     const tableBody = document.querySelector('.data-table tbody');
     const infoEl = document.querySelector('.pagination-info');
     if (!tableBody) return;
+
+    // Update sort icons in DOM
+    const sortIcons = document.querySelectorAll('.sort-icon');
+    sortIcons.forEach(icon => {
+        icon.textContent = '';
+    });
+    const activeIcon = document.getElementById(`sort-icon-${customerSortKey}`);
+    if (activeIcon) {
+        activeIcon.textContent = customerSortDirection === 'asc' ? ' ▲' : ' ▼';
+    }
 
     // 1. Calculation for Pagination
     const total = filteredCustomers.length;
@@ -187,12 +231,29 @@ window.handleDeleteCustomer = (id, name) => {
     });
 };
 
-window.openCustomerModal = async (id = null) => {
+window.openCustomerModal = async (id = null, bypassOrderCheck = false) => {
     console.log("openCustomerModal triggered with ID:", id);
 
     let cleanId = id;
     if (typeof id === 'string' && id.includes('C-')) {
         cleanId = parseInt(id.replace('C-', ''));
+    }
+
+    if (!cleanId && !bypassOrderCheck) {
+        window.openDeleteConfirm({
+            title: 'Add Customer Profile',
+            message: `You are creating a new customer profile without an active order. Are you sure you want to proceed?`,
+            confirmText: 'Yes, Proceed',
+            cancelText: 'Cancel',
+            confirmClass: 'btn-confirm-proceed',
+            icon: 'user-plus',
+            iconBg: 'var(--primary-light)',
+            iconColor: 'var(--primary)',
+            onConfirm: async () => {
+                await window.openCustomerModal(null, true);
+            }
+        });
+        return;
     }
 
     // 1. Ensure modal and its content are loaded
@@ -234,6 +295,44 @@ window.openCustomerModal = async (id = null) => {
     if (phoneInput) phoneInput.value = '';
     modal.setAttribute('data-editing-id', cleanId || '');
 
+    // Clear warning states
+    const nameWarning = document.getElementById('custNameWarning');
+    const phoneWarning = document.getElementById('custPhoneWarning');
+    if (nameWarning) {
+        nameWarning.style.display = 'none';
+        nameWarning.textContent = '';
+    }
+    if (phoneWarning) {
+        phoneWarning.style.display = 'none';
+        phoneWarning.textContent = '';
+    }
+    if (nameInput) {
+        nameInput.style.borderColor = '';
+        nameInput.classList.remove('input-error');
+    }
+    if (phoneInput) {
+        phoneInput.style.borderColor = '';
+        phoneInput.classList.remove('input-error');
+    }
+
+    // Attach inline validation listeners with debounce
+    if (nameInput && !nameInput.dataset.dupCheckInitialized) {
+        const debouncedCheck = window.debounce(() => {
+            const currentId = modal.getAttribute('data-editing-id') || null;
+            checkCustomerDuplicates(nameInput.value.trim(), phoneInput.value.trim(), currentId);
+        }, 500);
+        nameInput.addEventListener('input', debouncedCheck);
+        nameInput.dataset.dupCheckInitialized = 'true';
+    }
+    if (phoneInput && !phoneInput.dataset.dupCheckInitialized) {
+        const debouncedCheck = window.debounce(() => {
+            const currentId = modal.getAttribute('data-editing-id') || null;
+            checkCustomerDuplicates(nameInput.value.trim(), phoneInput.value.trim(), currentId);
+        }, 500);
+        phoneInput.addEventListener('input', debouncedCheck);
+        phoneInput.dataset.dupCheckInitialized = 'true';
+    }
+
     // 4. Data Population
     if (cleanId) {
         console.log("Fetching data for edit mode, ID:", cleanId);
@@ -255,6 +354,51 @@ window.openCustomerModal = async (id = null) => {
     }
 };
 
+async function checkCustomerDuplicates(name, phone, ignore_id) {
+    const nameInput = document.getElementById('custName');
+    const phoneInput = document.getElementById('custPhone');
+    const nameWarning = document.getElementById('custNameWarning');
+    const phoneWarning = document.getElementById('custPhoneWarning');
+    
+    if (!nameWarning || !phoneWarning) return;
+    
+    // Reset individual warning text and borders
+    nameWarning.style.display = 'none';
+    nameWarning.textContent = '';
+    phoneWarning.style.display = 'none';
+    phoneWarning.textContent = '';
+    if (nameInput) {
+        nameInput.style.borderColor = '';
+        nameInput.classList.remove('input-error');
+    }
+    if (phoneInput) {
+        phoneInput.style.borderColor = '';
+        phoneInput.classList.remove('input-error');
+    }
+    
+    if (!name && !phone) return;
+    
+    try {
+        const check = await window.pywebview.api.check_customer_duplicate(name, phone, ignore_id || null);
+        if (check && check.status === "success") {
+            if (check.name_match && name.length > 0) {
+                nameWarning.textContent = "A customer with this name already exists.";
+                nameWarning.style.display = "block";
+            }
+            if (check.phone_match && phone.length > 0) {
+                phoneWarning.textContent = "This phone number is already registered. Please use a different number or update the existing profile.";
+                phoneWarning.style.display = "block";
+                if (phoneInput) {
+                    phoneInput.style.borderColor = "#DC2626";
+                    phoneInput.classList.add('input-error');
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Duplicate check error:", e);
+    }
+}
+
 window.closeCustomerModal = () => {
     const modal = document.getElementById('customerModal');
     if (modal) {
@@ -262,7 +406,29 @@ window.closeCustomerModal = () => {
     }
 };
 
-window.saveCustomer = async () => {
+window.executeSaveCustomer = async (id, name, phone) => {
+    try {
+        let response;
+        if (id) {
+            response = await window.pywebview.api.update_customer(id, name, phone);
+        } else {
+            response = await window.pywebview.api.add_customer(name, phone);
+        }
+
+        if (response.status === "success") {
+            window.showToast("Customer profile saved successfully!", "success");
+            window.closeCustomerModal();
+            await loadCustomers();
+        } else {
+            window.showToast("Error: " + response.message, "error");
+        }
+    } catch (err) {
+        console.error("Execute Save Customer Failed:", err);
+        window.showToast("A system error occurred while saving.", "error");
+    }
+};
+
+window.saveCustomer = async (bypassNameCheck = false) => {
     const modal = document.getElementById('customerModal');
     const id = modal.getAttribute('data-editing-id');
     const nameInput = document.getElementById('custName');
@@ -285,20 +451,41 @@ window.saveCustomer = async () => {
     }
 
     try {
-        let response;
-        if (id) {
-            response = await window.pywebview.api.update_customer(id, name, phone);
-        } else {
-            response = await window.pywebview.api.add_customer(name, phone);
+        const check = await window.pywebview.api.check_customer_duplicate(name, phone, id || null);
+        if (check && check.status === "success") {
+            if (check.phone_match) {
+                // Block submission entirely
+                const phoneWarning = document.getElementById('custPhoneWarning');
+                if (phoneWarning) {
+                    phoneWarning.textContent = "This phone number is already registered. Please use a different number or update the existing profile.";
+                    phoneWarning.style.display = "block";
+                }
+                phoneInput.style.borderColor = "#DC2626";
+                phoneInput.classList.add('input-error');
+                window.showToast("This phone number is already registered.", "error");
+                return;
+            }
+            if (check.name_match && !bypassNameCheck) {
+                // Pause submission and show confirmation modal
+                window.openDeleteConfirm({
+                    title: 'Duplicate Profile Found',
+                    message: `A profile for ${name} already exists in the system. Are you sure you want to create a new, separate profile?`,
+                    confirmText: 'Yes, Create',
+                    cancelText: 'Cancel',
+                    confirmClass: 'btn-confirm-dup',
+                    processingText: 'Saving...',
+                    icon: 'users',
+                    iconBg: 'var(--order-progress-bg)',
+                    iconColor: 'var(--order-progress-text)',
+                    onConfirm: async () => {
+                        await window.saveCustomer(true);
+                    }
+                });
+                return;
+            }
         }
 
-        if (response.status === "success") {
-            window.showToast("Customer profile saved successfully!", "success");
-            window.closeCustomerModal();
-            await loadCustomers();
-        } else {
-            window.showToast("Error: " + response.message, "error");
-        }
+        await window.executeSaveCustomer(id, name, phone);
     } catch (err) {
         console.error("Save Customer Failed:", err);
         window.showToast("A system error occurred while saving.", "error");
@@ -314,3 +501,5 @@ Object.defineProperty(window, 'customerFilter', {
     get: () => customerFilter,
     set: (val) => { customerFilter = val; }
 });
+
+})();

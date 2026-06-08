@@ -8,10 +8,16 @@
             <div class="modal-body" style="flex-direction: column; gap: 10px; padding-bottom: 20px;">
                 <h2 class="modal-title" id="customerModalTitle">New Customer</h2>
                 
-                <div class="details-section">
-                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">Basic Information</p>
-                    <input type="text" placeholder="Full Name" class="modal-input" id="custName" onkeypress="return (event.charCode < 48 || event.charCode > 57)">
-                    <input type="text" placeholder="Contact Number (e.g. 09123456789)" class="modal-input" id="custPhone" maxlength="11" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                <div class="details-section" style="display: flex; flex-direction: column; gap: 8px;">
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0px; font-weight: 600;">Basic Information</p>
+                    <div>
+                        <input type="text" placeholder="Full Name" class="modal-input" id="custName" onkeypress="return (event.charCode < 48 || event.charCode > 57)" style="margin-bottom: 0px; width: 100%;">
+                        <span id="custNameWarning" style="color: #D97706; font-size: 11px; display: none; margin-top: 4px; font-weight: 500;"></span>
+                    </div>
+                    <div>
+                        <input type="text" placeholder="Contact Number (e.g. 09123456789)" class="modal-input" id="custPhone" maxlength="11" onkeypress="return event.charCode >= 48 && event.charCode <= 57" style="margin-bottom: 0px; width: 100%;">
+                        <span id="custPhoneWarning" style="color: #DC2626; font-size: 11px; display: none; margin-top: 4px; font-weight: 500;"></span>
+                    </div>
                 </div>
             </div>
 

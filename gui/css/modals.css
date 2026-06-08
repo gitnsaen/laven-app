@@ -501,10 +501,50 @@
     color: #1a4d44;
 }
 
-.info-tag.status-tag { background: #A3F7E1; }
-.info-tag.status-tag[data-status="Paid"] { background: var(--ready-bg); color: var(--ready-text); }
-.info-tag.status-tag[data-status="Partially Paid"] { background: var(--progress-bg); color: var(--progress-text); }
-.info-tag.status-tag[data-status="Unpaid"] { background: var(--pending-bg); color: var(--pending-text); }
+.info-tag.status-tag {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 6px 14px !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+}
+
+.info-tag.status-tag::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.info-tag.status-tag.paid,
+.info-tag.status-tag[data-status="Paid"],
+.info-tag.status-tag[data-status="Fully Paid"] {
+    background-color: var(--payment-paid-bg) !important;
+    color: var(--payment-paid-text) !important;
+    border: 1px solid var(--payment-paid-border) !important;
+}
+
+.info-tag.status-tag.partial,
+.info-tag.status-tag[data-status="Partially Paid"] {
+    background-color: var(--payment-partial-bg) !important;
+    color: var(--payment-partial-text) !important;
+    border: 1px solid var(--payment-partial-border) !important;
+}
+
+.info-tag.status-tag.unpaid,
+.info-tag.status-tag[data-status="Unpaid"] {
+    background-color: var(--payment-unpaid-bg) !important;
+    color: var(--payment-unpaid-text) !important;
+    border: 1px solid var(--payment-unpaid-border) !important;
+}
 
 .info-tag.amount-tag { background: #E6F7F4; }
 
@@ -553,6 +593,16 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
+}
+
+.btn-submit[disabled] {
+    background: #cbd5e1 !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
 }
 
 .btn-next:hover, .btn-submit:hover {
@@ -675,23 +725,74 @@
     transition: var(--transition-standard);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     border: 1px solid transparent !important;
+    border-radius: 999px !important; /* Pill Shape */
 }
 
-.status-pill-trigger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15);
-    filter: brightness(1.05);
+.status-pill-trigger[data-status="Pending"] {
+    background: var(--order-pending-bg) !important;
+    color: var(--order-pending-text) !important;
 }
 
-.status-pill-trigger:active {
-    transform: translateY(0);
+.status-pill-trigger[data-status="On Progress"] {
+    background: var(--order-progress-bg) !important;
+    color: var(--order-progress-text) !important;
 }
 
-.status-pill-trigger[data-status="Pending"] { background: var(--pending-text) !important; color: white !important; }
-.status-pill-trigger[data-status="On Progress"] { background: var(--progress-text) !important; color: white !important; }
 .status-pill-trigger[data-status="Done"],
-.status-pill-trigger[data-status="Ready"] { background: var(--ready-text) !important; color: white !important; }
-.status-pill-trigger[data-status="Claimed"] { background: var(--claimed-text) !important; color: white !important; }
+.status-pill-trigger[data-status="Ready"] {
+    background: var(--order-ready-bg) !important;
+    color: var(--order-ready-text) !important;
+}
+
+.status-pill-trigger[data-status="Claimed"] {
+    background: var(--order-claimed-bg) !important;
+    color: var(--order-claimed-text) !important;
+}
+
+.status-pill-trigger[data-status="Cancelled"] {
+    background: var(--order-cancelled-bg) !important;
+    color: var(--order-cancelled-text) !important;
+}
+
+/* Order Badge (Progress states) styling in modals */
+.status-badge.order-badge {
+    border-radius: 999px !important;
+    border: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    padding: 6px 16px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+.status-badge.order-badge[data-status="Pending"] {
+    background: var(--order-pending-bg) !important;
+    color: var(--order-pending-text) !important;
+}
+
+.status-badge.order-badge[data-status="On Progress"] {
+    background: var(--order-progress-bg) !important;
+    color: var(--order-progress-text) !important;
+}
+
+.status-badge.order-badge[data-status="Done"],
+.status-badge.order-badge[data-status="Ready"] {
+    background: var(--order-ready-bg) !important;
+    color: var(--order-ready-text) !important;
+}
+
+.status-badge.order-badge[data-status="Claimed"] {
+    background: var(--order-claimed-bg) !important;
+    color: var(--order-claimed-text) !important;
+}
+
+.status-badge.order-badge[data-status="Cancelled"] {
+    background: var(--order-cancelled-bg) !important;
+    color: var(--order-cancelled-text) !important;
+}
 
 @media (max-width: 768px) {
     .modal-body { flex-direction: column; gap: 20px; }
@@ -700,3 +801,222 @@
     .btn-clear { width: 100%; margin-bottom: 12px; }
     .modal-footer { flex-direction: column; }
 }
+
+/* Gray-washed Secondary Column (for focus emphasis) */
+.payment-overview-graywashed {
+    opacity: 0.5;
+    filter: grayscale(0.5);
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.payment-overview-graywashed:hover {
+    opacity: 1;
+    filter: grayscale(0);
+}
+
+/* Balance Pill Value Color Mapping inside Payment Overview */
+.pill-value.red {
+    background: var(--payment-unpaid-bg) !important;
+    color: var(--payment-unpaid-text) !important;
+    border: 1px solid var(--payment-unpaid-border) !important;
+}
+
+.pill-value.ochre {
+    background: var(--payment-partial-bg) !important;
+    color: var(--payment-partial-text) !important;
+    border: 1px solid var(--payment-partial-border) !important;
+}
+
+.pill-value.teal {
+    background: var(--payment-paid-bg) !important;
+    color: var(--payment-paid-text) !important;
+    border: 1px solid var(--payment-paid-border) !important;
+}
+
+.pill-value.gray {
+    background: #F1F5F9 !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Info-tag Balance Status Color Mapping inside View/Add Order Summaries */
+.info-tag.unpaid {
+    background-color: var(--payment-unpaid-bg) !important;
+    color: var(--payment-unpaid-text) !important;
+    border: 1px solid var(--payment-unpaid-border) !important;
+}
+
+.info-tag.partial {
+    background-color: var(--payment-partial-bg) !important;
+    color: var(--payment-partial-text) !important;
+    border: 1px solid var(--payment-partial-border) !important;
+}
+
+.info-tag.paid {
+    background-color: var(--payment-paid-bg) !important;
+    color: var(--payment-paid-text) !important;
+    border: 1px solid var(--payment-paid-border) !important;
+}
+
+.info-tag.gray {
+    background-color: #F1F5F9 !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.payment-resolution-hover-focus {
+    opacity: 0.75;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.payment-resolution-hover-focus:hover,
+.payment-resolution-hover-focus:focus-within {
+    opacity: 1;
+}
+
+.payment-resolution-hover-focus.collapsed {
+    cursor: pointer;
+    opacity: 0.75;
+    flex: 0 0 auto !important;
+    padding: 16px 32px !important;
+}
+
+.payment-resolution-hover-focus.collapsed:hover {
+    opacity: 1;
+    border: 1px solid var(--primary-light) !important;
+    background: var(--surface-bg) !important;
+    box-shadow: 0 4px 16px rgba(0, 163, 141, 0.08);
+}
+
+.payment-resolution-hover-focus.collapsed > *:not(h2) {
+    display: none !important;
+}
+
+.payment-resolution-hover-focus.collapsed h2 {
+    margin-bottom: 0 !important;
+}
+
+.payment-resolution-hover-focus:not(.collapsed) .expand-icon {
+    transform: rotate(45deg);
+    color: var(--danger) !important;
+}
+
+/* Editable currency input styling */
+.edit-active-input {
+    background: #FFFFFF !important;
+    border: 1px solid var(--border-color) !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: text;
+}
+
+.edit-active-input:hover {
+    border-color: var(--border-hover) !important;
+}
+
+.edit-active-input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 163, 141, 0.1) !important;
+    background: #FFFFFF !important;
+}
+
+/* Invalid / Exceeding payment input error state */
+.input-error-state {
+    color: #DC2626 !important;
+    border: 1px solid #DC2626 !important;
+    background: #FEF2F2 !important;
+}
+
+.input-error-state:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+    background: #FFFFFF !important;
+}
+
+/* Autocomplete Typeahead suggestions */
+.suggestions-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--dropdown-shadow);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 4px;
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover, .suggestion-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.suggestion-item .suggestion-phone {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Status-specific Confirmation Button overrides */
+.btn-delete.btn-status-claimed {
+    background: #3B82F6 !important;
+}
+.btn-delete.btn-status-claimed:hover {
+    background: #2563EB !important;
+}
+
+.btn-delete.btn-status-ready {
+    background: #10B981 !important;
+}
+.btn-delete.btn-status-ready:hover {
+    background: #059669 !important;
+}
+
+.btn-delete.btn-status-progress {
+    background: #F97316 !important;
+}
+.btn-delete.btn-status-progress:hover {
+    background: #EA580C !important;
+}
+
+.btn-delete.btn-status-pending {
+    background: #EF4444 !important;
+}
+.btn-delete.btn-status-pending:hover {
+    background: #DC2626 !important;
+}
+
+/* Profile Confirmation Button overrides */
+.btn-delete.btn-confirm-proceed {
+    background: var(--primary) !important;
+}
+.btn-delete.btn-confirm-proceed:hover {
+    background: var(--primary-hover) !important;
+}
+
+.btn-delete.btn-confirm-dup {
+    background: #F97316 !important;
+}
+.btn-delete.btn-confirm-dup:hover {
+    background: #EA580C !important;
+}
+

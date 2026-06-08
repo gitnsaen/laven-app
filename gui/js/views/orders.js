@@ -3,12 +3,15 @@
  * Handles order listing, filtering, and status management
  */
 
+(() => {
 // Global State
 let allOrders = [];
 let filteredOrders = [];
 let currentOrderPage = 1;
 const orderRowsPerPage = 15;
 let orderFilter = 'All';
+let orderSortKey = 'orderID';
+let orderSortDirection = 'desc';
 
 // Add Order Draft State
 let orderDraft = {
@@ -17,13 +20,62 @@ let orderDraft = {
     addons: {},
     customerName: '',
     contactNum: '',
+    customer_id: null,
     employeeId: null,
     paymentMethod: 'Cash',
     amountDue: 0,
     amountPaid: 0
 };
 
+let orderModalCustomers = [];
 let currentFormData = { services: [], addons: [], employees: [] };
+
+async function checkOrderCustomerDuplicates(name, phone) {
+    const nameInput = document.getElementById('custNameInput');
+    const contactInput = document.getElementById('custContactInput');
+    const nameWarning = document.getElementById('orderCustNameWarning');
+    const phoneWarning = document.getElementById('orderCustPhoneWarning');
+
+    if (!nameWarning || !phoneWarning) return;
+
+    nameWarning.style.display = 'none';
+    nameWarning.textContent = '';
+    phoneWarning.style.display = 'none';
+    phoneWarning.textContent = '';
+
+    if (nameInput) {
+        nameInput.style.borderColor = '';
+        nameInput.classList.remove('input-error');
+    }
+    if (contactInput) {
+        contactInput.style.borderColor = '';
+        contactInput.classList.remove('input-error');
+    }
+
+    // Only run checks if customer_id is null (manually typing a new customer on-the-fly)
+    if (orderDraft.customer_id !== null) return;
+    if (!name && !phone) return;
+
+    try {
+        const check = await window.pywebview.api.check_customer_duplicate(name, phone, null);
+        if (check && check.status === "success") {
+            if (check.name_match && name.length > 0) {
+                nameWarning.textContent = "A customer with this name already exists.";
+                nameWarning.style.display = "block";
+            }
+            if (check.phone_match && phone.length > 0) {
+                phoneWarning.textContent = "This phone number is already registered. Please use a different number or update the existing profile.";
+                phoneWarning.style.display = "block";
+                if (contactInput) {
+                    contactInput.style.borderColor = "#DC2626";
+                    contactInput.classList.add('input-error');
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Order customer duplicate check error:", e);
+    }
+}
 
 // --- ADD ORDER WIZARD --- //
 
@@ -36,6 +88,12 @@ window.openOrderModal = async () => {
     }
 
     currentFormData = await window.pywebview.api.get_order_form_data();
+    try {
+        orderModalCustomers = await window.pywebview.api.get_customers();
+    } catch (e) {
+        console.error("Failed to load customer list for typeahead:", e);
+        orderModalCustomers = [];
+    }
 
     // Services Grid
     const servicesGrid = document.querySelector('.services-grid');
@@ -71,17 +129,190 @@ window.openOrderModal = async () => {
     // Employees Dropdown
     const empDropdownMenu = document.querySelector('#step2 .dropdown-menu');
     const empTrigger = document.querySelector('#step2 .selected-value');
-    if (empDropdownMenu && currentFormData.employees.length > 0) {
-        empDropdownMenu.innerHTML = currentFormData.employees.map(e => {
-            const fullName = `${e.firstName} ${e.midInit ? e.midInit + ' ' : ''}${e.lastName}`;
-            return `
-                <div class="dropdown-item" onclick="window.selectOption(this, '${fullName}'); window.selectEmployee(${e.employeeID})">
-                    ${fullName}
-                </div>
-            `;
-        }).join('');
+    const warningEl = document.getElementById('noEmployeesWarning');
 
-        if (empTrigger) empTrigger.textContent = 'Select Employee';
+    if (empDropdownMenu) {
+        const triggerBtn = empDropdownMenu.closest('.dropdown-container').querySelector('.modal-dropdown-trigger');
+        if (currentFormData.employees && currentFormData.employees.length > 0) {
+            empDropdownMenu.innerHTML = currentFormData.employees.map(e => {
+                const fullName = `${e.firstName} ${e.midInit ? e.midInit + ' ' : ''}${e.lastName}`;
+                return `
+                    <div class="dropdown-item" onclick="window.selectOption(this, '${fullName}'); window.selectEmployee(${e.employeeID})">
+                        ${fullName}
+                    </div>
+                `;
+            }).join('');
+
+            if (empTrigger) empTrigger.textContent = 'Select Employee';
+            if (triggerBtn) {
+                triggerBtn.disabled = false;
+                triggerBtn.style.opacity = '1';
+                triggerBtn.style.cursor = 'pointer';
+            }
+            if (warningEl) warningEl.style.display = 'none';
+        } else {
+            empDropdownMenu.innerHTML = '';
+            if (empTrigger) empTrigger.textContent = 'No Employees Available';
+            if (triggerBtn) {
+                triggerBtn.disabled = true;
+                triggerBtn.style.opacity = '0.6';
+                triggerBtn.style.cursor = 'not-allowed';
+            }
+            if (warningEl) warningEl.style.display = 'block';
+        }
+    }
+
+    // Customer Autocomplete Typeahead Listeners
+    const nameInput = document.getElementById('custNameInput');
+    const contactInput = document.getElementById('custContactInput');
+    const suggestionsBox = document.getElementById('custSuggestions');
+
+    if (nameInput && !nameInput.dataset.typeaheadInitialized) {
+        nameInput.dataset.typeaheadInitialized = 'true';
+        let activeIndex = -1;
+
+        const closeSuggestions = () => {
+            if (suggestionsBox) {
+                suggestionsBox.style.display = 'none';
+                suggestionsBox.innerHTML = '';
+            }
+            activeIndex = -1;
+        };
+
+        const renderSuggestions = (matches) => {
+            if (!suggestionsBox) return;
+            if (matches.length === 0) {
+                closeSuggestions();
+                return;
+            }
+
+            suggestionsBox.innerHTML = matches.map((c, index) => `
+                <div class="suggestion-item" data-index="${index}" data-cust-id="${c.customerID}">
+                    <span class="suggestion-name">${c.customerName}</span>
+                    <span class="suggestion-phone">${c.contactNum}</span>
+                </div>
+            `).join('');
+
+            suggestionsBox.style.display = 'block';
+            activeIndex = -1;
+        };
+
+        const debouncedDupCheck = window.debounce(() => {
+            checkOrderCustomerDuplicates(
+                nameInput ? nameInput.value.trim() : '',
+                contactInput ? contactInput.value.trim() : ''
+            );
+        }, 500);
+
+        nameInput.addEventListener('input', () => {
+            const query = nameInput.value.toLowerCase().trim();
+            orderDraft.customer_id = null; // Typing resets selected ID
+
+            // Trigger debounce duplicate check since typing resets customer_id
+            debouncedDupCheck();
+
+            if (query.length === 0) {
+                closeSuggestions();
+                return;
+            }
+
+            const matches = orderModalCustomers.filter(c => 
+                (c.customerName || '').toLowerCase().includes(query) ||
+                (c.contactNum || '').includes(query)
+            ).slice(0, 5);
+
+            renderSuggestions(matches);
+        });
+
+        if (contactInput) {
+            contactInput.addEventListener('input', () => {
+                orderDraft.customer_id = null; // Manual contact edit resets ID
+                debouncedDupCheck();
+            });
+        }
+
+        nameInput.addEventListener('keydown', (e) => {
+            if (suggestionsBox.style.display === 'none') return;
+
+            const items = suggestionsBox.querySelectorAll('.suggestion-item');
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIndex = (activeIndex + 1) % items.length;
+                updateActiveItem(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIndex = (activeIndex - 1 + items.length) % items.length;
+                updateActiveItem(items);
+            } else if (e.key === 'Enter') {
+                if (activeIndex > -1 && activeIndex < items.length) {
+                    e.preventDefault();
+                    selectSuggestion(items[activeIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                closeSuggestions();
+            }
+        });
+
+        const updateActiveItem = (items) => {
+            items.forEach((item, index) => {
+                if (index === activeIndex) {
+                    item.classList.add('active');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        };
+
+        const selectSuggestion = (item) => {
+            const custId = parseInt(item.getAttribute('data-cust-id'));
+            const customer = orderModalCustomers.find(c => c.customerID === custId);
+            if (customer) {
+                nameInput.value = customer.customerName || '';
+                if (contactInput) {
+                    contactInput.value = customer.contactNum || '';
+                    window.handleContactInput(contactInput);
+                }
+                orderDraft.customer_id = customer.customerID;
+
+                // Clear warnings/errors immediately upon selecting an existing customer
+                const nameWarning = document.getElementById('orderCustNameWarning');
+                const phoneWarning = document.getElementById('orderCustPhoneWarning');
+                if (nameWarning) {
+                    nameWarning.style.display = 'none';
+                    nameWarning.textContent = '';
+                }
+                if (phoneWarning) {
+                    phoneWarning.style.display = 'none';
+                    phoneWarning.textContent = '';
+                }
+                if (nameInput) {
+                    nameInput.style.borderColor = '';
+                    nameInput.classList.remove('input-error');
+                }
+                if (contactInput) {
+                    contactInput.style.borderColor = '';
+                    contactInput.classList.remove('input-error');
+                }
+            }
+            closeSuggestions();
+        };
+
+        suggestionsBox.addEventListener('click', (e) => {
+            const item = e.target.closest('.suggestion-item');
+            if (item) {
+                selectSuggestion(item);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!nameInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+                closeSuggestions();
+            }
+        });
     }
 
     window.clearStep1();
@@ -100,7 +331,7 @@ window.openOrderModal = async () => {
     window.openModal('addOrderModal');
 };
 
-window.nextStep = (stepNumber) => {
+window.nextStep = async (stepNumber, bypassNameCheck = false) => {
     const targetId = `step${stepNumber}`;
     const targetStep = document.getElementById(targetId);
     if (!targetStep) return;
@@ -148,6 +379,57 @@ window.nextStep = (stepNumber) => {
             if (!priceVal.valid) {
                 window.showToast(priceVal.reason, "error");
                 return;
+            }
+
+            const paidClean = parseFloat(paidRaw.replace(/[^0-9.]/g, '')) || 0;
+            if (paidClean > orderDraft.amountDue) {
+                window.showToast("Amount Paid cannot exceed Amount Due.", "error");
+                return;
+            }
+
+            // Perform duplicate check if we are creating a new customer on-the-fly
+            if (orderDraft.customer_id === null) {
+                try {
+                    const check = await window.pywebview.api.check_customer_duplicate(name, contact, null);
+                    if (check && check.status === "success") {
+                        if (check.phone_match) {
+                            // Block submission / transition entirely
+                            const phoneWarning = document.getElementById('orderCustPhoneWarning');
+                            if (phoneWarning) {
+                                phoneWarning.textContent = "This phone number is already registered. Please use a different number or update the existing profile.";
+                                phoneWarning.style.display = "block";
+                            }
+                            const contactInput = document.getElementById('custContactInput');
+                            if (contactInput) {
+                                contactInput.style.borderColor = "#DC2626";
+                                contactInput.classList.add('input-error');
+                            }
+                            window.showToast("This phone number is already registered.", "error");
+                            return;
+                        }
+                        if (check.name_match && !bypassNameCheck) {
+                            // Pause form submission and trigger confirmation modal
+                            window.openDeleteConfirm({
+                                title: 'Duplicate Profile Found',
+                                message: `A profile for ${name} already exists in the system. Are you sure you want to create a new, separate profile?`,
+                                confirmText: 'Yes, Create',
+                                cancelText: 'Cancel',
+                                confirmClass: 'btn-confirm-dup',
+                                processingText: 'Proceeding...',
+                                icon: 'users',
+                                iconBg: 'var(--order-progress-bg)',
+                                iconColor: 'var(--order-progress-text)',
+                                onConfirm: async () => {
+                                    await window.nextStep(3, true);
+                                    window.openModal('addOrderModal');
+                                }
+                            });
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Duplicate checking failed during step transition:", e);
+                }
             }
 
             orderDraft.customerName = name;
@@ -261,15 +543,23 @@ window.calculateAmountDue = () => {
 };
 
 window.handleAmountPaidInput = (el) => {
-    let val = el.value.replace(/[^0-9.]/g, '');
+    if (el) window.formatPesosInput(el);
+    let val = el ? el.value.replace(/[^0-9.]/g, '') : '';
     if (val === '') val = '0';
 
-    orderDraft.amountPaid = parseFloat(val);
+    const entered = parseFloat(val) || 0;
+    const due = orderDraft.amountDue;
+    const errorEl = document.getElementById('addOrderPaymentError');
 
-    if (!el.matches(':focus')) {
-        el.value = `₱${orderDraft.amountPaid.toFixed(2)}`;
+    if (entered > due) {
+        if (el) el.classList.add('input-error-state');
+        if (errorEl) errorEl.style.display = 'block';
+    } else {
+        if (el) el.classList.remove('input-error-state');
+        if (errorEl) errorEl.style.display = 'none';
     }
 
+    orderDraft.amountPaid = entered;
     window.updatePaymentStatusBadge();
 };
 
@@ -289,21 +579,130 @@ window.updatePaymentStatusBadge = () => {
     }
 };
 
+let contactDebounceTimer = null;
+
+window.handleContactInput = (el) => {
+    if (!el) return;
+
+    // Clear any active timer while typing
+    if (contactDebounceTimer) {
+        clearTimeout(contactDebounceTimer);
+    }
+
+    const contact = el.value.trim();
+    const errorEl = document.getElementById('custContactError');
+    if (!errorEl) return;
+
+    const isValid = /^09\d{9}$/.test(contact);
+
+    // Clear error immediately if they empty the input
+    if (contact === '') {
+        el.classList.remove('input-error-state');
+        errorEl.style.display = 'none';
+        return;
+    }
+
+    // Clear error immediately if the input becomes valid while typing
+    if (isValid) {
+        el.classList.remove('input-error-state');
+        errorEl.style.display = 'none';
+        return;
+    }
+
+    // Delay showing the error until they stop typing (1.2 seconds)
+    contactDebounceTimer = setTimeout(() => {
+        const currentContact = el.value.trim();
+        const currentValid = /^09\d{9}$/.test(currentContact);
+        if (currentContact !== '' && !currentValid) {
+            el.classList.add('input-error-state');
+            errorEl.style.display = 'block';
+        }
+    }, 1200);
+};
+
+window.handleContactBlur = (el) => {
+    if (!el) return;
+    if (contactDebounceTimer) {
+        clearTimeout(contactDebounceTimer);
+    }
+
+    const contact = el.value.trim();
+    const errorEl = document.getElementById('custContactError');
+    if (!errorEl) return;
+
+    const isValid = /^09\d{9}$/.test(contact);
+
+    if (contact !== '' && !isValid) {
+        el.classList.add('input-error-state');
+        errorEl.style.display = 'block';
+    } else {
+        el.classList.remove('input-error-state');
+        errorEl.style.display = 'none';
+    }
+};
+
 window.clearStep2 = () => {
     const custName = document.getElementById('custNameInput');
-    if (custName) custName.value = '';
+    if (custName) {
+        custName.value = '';
+        custName.classList.remove('input-error-state');
+        custName.style.borderColor = '';
+        custName.classList.remove('input-error');
+    }
 
     const custContact = document.getElementById('custContactInput');
-    if (custContact) custContact.value = '';
+    if (custContact) {
+        custContact.value = '';
+        custContact.classList.remove('input-error-state');
+        custContact.style.borderColor = '';
+        custContact.classList.remove('input-error');
+    }
+    
+    const contactError = document.getElementById('custContactError');
+    if (contactError) contactError.style.display = 'none';
+
+    const nameWarning = document.getElementById('orderCustNameWarning');
+    if (nameWarning) {
+        nameWarning.style.display = 'none';
+        nameWarning.textContent = '';
+    }
+
+    const phoneWarning = document.getElementById('orderCustPhoneWarning');
+    if (phoneWarning) {
+        phoneWarning.style.display = 'none';
+        phoneWarning.textContent = '';
+    }
 
     const paidInput = document.getElementById('amountPaidInput');
-    if (paidInput) paidInput.value = '₱0.00';
+    if (paidInput) {
+        paidInput.value = '₱0.00';
+        paidInput.classList.remove('input-error-state');
+    }
+
+    const paymentError = document.getElementById('addOrderPaymentError');
+    if (paymentError) paymentError.style.display = 'none';
+
+    const empTrigger = document.querySelector('#step2 .selected-value');
+    if (empTrigger) {
+        if (currentFormData && currentFormData.employees && currentFormData.employees.length > 0) {
+            empTrigger.textContent = 'Select Employee';
+        } else {
+            empTrigger.textContent = 'No Employees Available';
+        }
+    }
 
     orderDraft.customerName = '';
     orderDraft.contactNum = '';
+    orderDraft.customer_id = null;
     orderDraft.employeeId = null;
     orderDraft.paymentMethod = 'Cash';
     orderDraft.amountPaid = 0;
+
+    const suggestionsBox = document.getElementById('custSuggestions');
+    if (suggestionsBox) {
+        suggestionsBox.style.display = 'none';
+        suggestionsBox.innerHTML = '';
+    }
 };
 
 // --- STEP 3 LOGIC --- //
@@ -361,8 +760,17 @@ window.generateOrderSummary = () => {
     const summaryBalance = document.getElementById('summaryBalance');
     const balanceRow = document.getElementById('summaryBalanceRow');
 
-    if (summaryBalance) summaryBalance.textContent = `₱${balance.toFixed(2)}`;
-    if (balanceRow) balanceRow.style.display = balance > 0 ? 'flex' : 'none';
+    if (summaryBalance) {
+        summaryBalance.textContent = `₱${balance.toFixed(2)}`;
+        if (balance <= 0) {
+            summaryBalance.className = 'info-tag gray';
+        } else if (orderDraft.amountPaid > 0) {
+            summaryBalance.className = 'info-tag partial';
+        } else {
+            summaryBalance.className = 'info-tag unpaid';
+        }
+    }
+    if (balanceRow) balanceRow.style.display = 'flex';
 
     const summaryAmountPaid = document.getElementById('summaryAmountPaid');
     if (summaryAmountPaid) summaryAmountPaid.textContent = `₱${orderDraft.amountPaid.toFixed(2)}`;
@@ -428,13 +836,25 @@ window.openUpdateStatusModal = async (orderId) => {
     // Populate data
     document.getElementById('updateOrderIdText').textContent = `Order #${order.LaundryOrderID}`;
     document.getElementById('updateOrderIdText').setAttribute('data-id', order.LaundryOrderID);
+    window.originalOrderStatus = order.LaundryOrderStatus;
 
     document.getElementById('updatePaymentStatusBadge').textContent = order.paymentStatus;
     document.getElementById('updatePaymentStatusBadge').setAttribute('data-status', order.paymentStatus);
 
     document.getElementById('updateAmountDue').textContent = `₱${order.amount.toFixed(2)}`;
     document.getElementById('updateAmountPaid').textContent = `₱${order.totalPaid.toFixed(2)}`;
-    document.getElementById('updateBalance').textContent = `₱${order.balance.toFixed(2)}`;
+    
+    const updateBalanceEl = document.getElementById('updateBalance');
+    if (updateBalanceEl) {
+        updateBalanceEl.textContent = `₱${order.balance.toFixed(2)}`;
+        if (order.balance <= 0) {
+            updateBalanceEl.className = 'pill-value gray';
+        } else if (order.paymentStatus === 'Partially Paid') {
+            updateBalanceEl.className = 'pill-value ochre';
+        } else {
+            updateBalanceEl.className = 'pill-value red';
+        }
+    }
 
     // Reset inputs
     const statusTrigger = document.querySelector('#updateOrderStatusTrigger');
@@ -455,14 +875,66 @@ window.openUpdateStatusModal = async (orderId) => {
         }
     }
 
+    const addPaymentSection = document.getElementById('addPaymentSection');
+    const isPaid = order.paymentStatus === 'Paid' || order.paymentStatus === 'Fully Paid';
+    if (addPaymentSection) {
+        if (isPaid) {
+            addPaymentSection.style.display = 'none';
+        } else {
+            addPaymentSection.style.display = 'flex';
+            if (window.currentView === 'revenue') {
+                addPaymentSection.classList.remove('payment-resolution-hover-focus');
+                addPaymentSection.classList.remove('collapsed');
+                const expandIcon = addPaymentSection.querySelector('.expand-icon');
+                if (expandIcon) expandIcon.style.display = 'none';
+            } else {
+                addPaymentSection.classList.add('payment-resolution-hover-focus');
+                addPaymentSection.classList.add('collapsed');
+                const expandIcon = addPaymentSection.querySelector('.expand-icon');
+                if (expandIcon) expandIcon.style.display = 'block';
+            }
+        }
+    }
+
     const paymentMethodSection = document.getElementById('updatePaymentMethodSection');
     if (paymentMethodSection) {
         paymentMethodSection.style.display = 'none';
     }
 
     window.handleUpdatePaymentInput(paymentInput); // Initialize preview
+    window.checkUpdateStatusFormChanges(); // Initialize button state check (disables initially)
 
     window.openModal('updateStatusModal');
+};
+
+window.togglePaymentResolution = (event) => {
+    // If the view is revenue, it should not be collapsible since progress is hidden
+    if (window.currentView === 'revenue') return;
+
+    const section = document.getElementById('addPaymentSection');
+    if (!section) return;
+
+    const isCollapsed = section.classList.contains('collapsed');
+    
+    if (isCollapsed) {
+        // Expand if currently collapsed
+        section.classList.remove('collapsed');
+        // Focus the input
+        const input = document.getElementById('addPaymentInput');
+        if (input) input.focus();
+    } else {
+        // If already expanded, collapse only if they clicked the header or expand-icon
+        const header = section.querySelector('h2');
+        if (header && (header === event.target || header.contains(event.target))) {
+            section.classList.add('collapsed');
+            // Clear input so balance is reset
+            const input = document.getElementById('addPaymentInput');
+            if (input) {
+                input.value = '';
+                window.handleUpdatePaymentInput(input);
+            }
+        }
+    }
 };
 
 // Updates the status dropdown trigger text AND color
@@ -470,13 +942,60 @@ window.selectStatusAndColor = (item, value) => {
     window.selectOption(item, value);
     const trigger = document.getElementById('updateOrderStatusTrigger');
     if (trigger) trigger.setAttribute('data-status', value);
+    window.checkUpdateStatusFormChanges();
+};
+
+window.checkUpdateStatusFormChanges = () => {
+    const statusTrigger = document.querySelector('#updateOrderStatusTrigger');
+    const selectedStatus = statusTrigger ? statusTrigger.querySelector('.selected-value').textContent.trim() : '';
+    
+    const paymentInput = document.getElementById('addPaymentInput');
+    const paymentVal = paymentInput ? paymentInput.value.trim() : '';
+    
+    const statusChanged = selectedStatus !== window.originalOrderStatus;
+    const paymentAmount = parseFloat(paymentVal.replace(/[^0-9.]/g, '')) || 0;
+    const paymentChanged = paymentVal !== '' && paymentAmount > 0;
+    
+    const submitBtn = document.querySelector('#updateStatusModal .btn-submit');
+    if (submitBtn) {
+        if (statusChanged || paymentChanged) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    }
 };
 
 window.handleUpdatePaymentInput = (el) => {
+    if (el) window.formatPesosInput(el);
     const val = parseFloat((el && el.value) ? el.value.replace(/[^0-9.]/g, '') : 0) || 0;
     const due = parseFloat(document.getElementById('updateAmountDue').textContent.replace('₱', ''));
     const paid = parseFloat(document.getElementById('updateAmountPaid').textContent.replace('₱', ''));
+    
+    const remaining = Math.max(0, due - paid);
+    const errorEl = document.getElementById('updatePaymentError');
+
+    if (val > remaining) {
+        if (el) el.classList.add('input-error-state');
+        if (errorEl) errorEl.style.display = 'block';
+    } else {
+        if (el) el.classList.remove('input-error-state');
+        if (errorEl) errorEl.style.display = 'none';
+    }
+
     const newBalance = Math.max(0, due - paid - val);
+
+    const updateBalanceEl = document.getElementById('updateBalance');
+    if (updateBalanceEl) {
+        updateBalanceEl.textContent = `₱${newBalance.toFixed(2)}`;
+        if (newBalance <= 0) {
+            updateBalanceEl.className = 'pill-value gray';
+        } else if ((paid + val) > 0) {
+            updateBalanceEl.className = 'pill-value ochre';
+        } else {
+            updateBalanceEl.className = 'pill-value red';
+        }
+    }
 
     const newTotalPaid = paid + val;
     let previewStatus = "Unpaid";
@@ -490,11 +1009,11 @@ window.handleUpdatePaymentInput = (el) => {
     if (previewEl) {
         previewEl.textContent = previewStatus;
         if (previewStatus === 'Fully Paid') {
-            previewEl.style.color = 'var(--ready-text)';
+            previewEl.style.color = 'var(--payment-paid-text)';
         } else if (previewStatus === 'Partially Paid') {
-            previewEl.style.color = 'var(--progress-text)';
+            previewEl.style.color = 'var(--payment-partial-text)';
         } else {
-            previewEl.style.color = 'var(--pending-text)';
+            previewEl.style.color = 'var(--payment-unpaid-text)';
         }
     }
 
@@ -506,13 +1025,80 @@ window.handleUpdatePaymentInput = (el) => {
             paymentMethodSection.style.display = 'none';
         }
     }
+    window.checkUpdateStatusFormChanges();
 };
 
-window.saveUpdateStatus = async () => {
+window.saveUpdateStatus = async (bypassStatusConfirm = false) => {
     const idAttr = document.getElementById('updateOrderIdText').getAttribute('data-id');
     const orderId = parseInt(idAttr);
     const statusTrigger = document.querySelector('#updateOrderStatusTrigger .selected-value');
-    const newStatus = window.currentView === 'revenue' ? null : statusTrigger.textContent;
+    const newStatus = window.currentView === 'revenue' ? null : (statusTrigger ? statusTrigger.textContent.trim() : null);
+
+    const statusRanks = {
+        'Pending': 0,
+        'On Progress': 1,
+        'Done': 2,
+        'Claimed': 3
+    };
+
+    if (newStatus && newStatus !== window.originalOrderStatus && !bypassStatusConfirm) {
+        const oldRank = statusRanks[window.originalOrderStatus] !== undefined ? statusRanks[window.originalOrderStatus] : -1;
+        const newRank = statusRanks[newStatus] !== undefined ? statusRanks[newStatus] : -1;
+        
+        let confirmTitle = '';
+        let confirmMessage = '';
+        let confirmText = 'Yes, Change Status';
+        let btnClass = 'btn-status-claimed';
+        let iconName = 'package-check';
+        let iconBg = 'var(--order-claimed-bg)';
+        let iconColor = 'var(--order-claimed-text)';
+
+        if (newStatus === 'Claimed') {
+            confirmTitle = 'Mark Order as Claimed';
+            confirmMessage = 'Are you sure you want to change the status to Claimed? Please ensure the customer has received their laundry.';
+            confirmText = 'Yes, Claimed';
+        } else if (newRank < oldRank) {
+            confirmTitle = 'Downgrade Order Status';
+            const displayOld = window.originalOrderStatus === 'Done' ? 'Ready for Pickup' : window.originalOrderStatus;
+            const displayNew = newStatus === 'Done' ? 'Ready for Pickup' : newStatus;
+            confirmMessage = `Are you sure you want to downgrade the order status from "${displayOld}" to "${displayNew}"?`;
+            confirmText = 'Yes, Downgrade';
+
+            if (newStatus === 'Pending') {
+                btnClass = 'btn-status-pending';
+                iconName = 'clock';
+                iconBg = 'var(--order-pending-bg)';
+                iconColor = 'var(--order-pending-text)';
+            } else if (newStatus === 'On Progress') {
+                btnClass = 'btn-status-progress';
+                iconName = 'refresh-cw';
+                iconBg = 'var(--order-progress-bg)';
+                iconColor = 'var(--order-progress-text)';
+            } else if (newStatus === 'Done') {
+                btnClass = 'btn-status-ready';
+                iconName = 'sparkles';
+                iconBg = 'var(--order-ready-bg)';
+                iconColor = 'var(--order-ready-text)';
+            }
+        }
+
+        if (confirmTitle) {
+            window.openDeleteConfirm({
+                title: confirmTitle,
+                message: confirmMessage,
+                confirmText: confirmText,
+                cancelText: 'Cancel',
+                confirmClass: btnClass,
+                icon: iconName,
+                iconBg: iconBg,
+                iconColor: iconColor,
+                onConfirm: async () => {
+                    await window.saveUpdateStatus(true);
+                }
+            });
+            return;
+        }
+    }
 
     const paymentInput = document.getElementById('addPaymentInput');
     const paymentInputVal = paymentInput ? paymentInput.value.trim() : "";
@@ -524,7 +1110,16 @@ window.saveUpdateStatus = async () => {
             window.showToast(priceVal.reason, "error");
             return;
         }
-        additionalPayment = parseFloat(paymentInputVal.replace(/[₱,\s]/g, ''));
+        additionalPayment = parseFloat(paymentInputVal.replace(/[₱,\s]/g, '')) || 0;
+
+        const due = parseFloat(document.getElementById('updateAmountDue').textContent.replace('₱', ''));
+        const paid = parseFloat(document.getElementById('updateAmountPaid').textContent.replace('₱', ''));
+        const remaining = Math.max(0, due - paid);
+
+        if (additionalPayment > remaining) {
+            window.showToast("Record Payment Amount cannot exceed remaining balance.", "error");
+            return;
+        }
     }
 
     const paymentMethodTrigger = document.querySelector('#updatePaymentMethodTrigger .selected-value');
@@ -572,57 +1167,77 @@ function renderOrderTable() {
     const infoEl = tableWrapper.querySelector('.pagination-info');
     if (!tbody) return;
 
+    // Update sort icons in DOM
+    const sortIcons = tableWrapper.querySelectorAll('.sort-icon');
+    sortIcons.forEach(icon => {
+        icon.textContent = '';
+    });
+    const activeIcon = tableWrapper.querySelector(`#sort-icon-${orderSortKey}`);
+    if (activeIcon) {
+        activeIcon.textContent = orderSortDirection === 'asc' ? ' ▲' : ' ▼';
+    }
+
     const total = filteredOrders.length;
     const start = total === 0 ? 0 : (currentOrderPage - 1) * orderRowsPerPage;
     const end = Math.min(start + orderRowsPerPage, total);
     const displayList = filteredOrders.slice(start, end);
 
-    tbody.innerHTML = displayList.map(order => {
-        const isCancelled = order.status === 'Cancelled';
-        const rowStyle = isCancelled ? 'background-color: #f9fafb; color: #9ca3af;' : '';
-        const cellOpacity = isCancelled ? 'opacity: 0.5;' : '';
-        const idStyle = isCancelled ? 'text-decoration: line-through;' : '';
-
-        return `
-        <tr style="${rowStyle}">
-            <td class="id-cell" style="${cellOpacity} ${idStyle}">#${order.orderID}</td>
-            <td style="${cellOpacity}">
-                <div class="customer-info">
-                    <span class="name" style="${isCancelled ? 'color: #9ca3af;' : ''}">${order.customerName}</span>
-                    <span class="phone" style="${isCancelled ? 'color: #d1d5db;' : ''}">${order.contactNum || ''}</span>
-                </div>
-            </td>
-            <td style="${cellOpacity}">${order.datePlaced}</td>
-            <td style="${cellOpacity}">${order.dateClaimed || '-'}</td>
-            <td class="summary-clickable" onclick="window.openViewOrderModal(${order.orderID})" style="cursor: pointer; opacity: 1; position: relative; z-index: 2;">
-                <div class="summary-cell">
-                    <span class="items" style="${isCancelled ? 'color: var(--text-main);' : ''}">${order.summary}</span>
-                    <span class="price" style="${isCancelled ? 'color: var(--text-main);' : ''}">₱${parseFloat(order.amount || 0).toFixed(2)}</span>
-                </div>
-            </td>
-            <td class="payment-cell" style="${cellOpacity}">
-                <span class="status-badge" data-status="${order.paymentStatus || 'Unpaid'}">${order.paymentStatus || 'Unpaid'}</span>
-            </td>
-            <td class="status-cell">
-                <button class="modal-dropdown-trigger small" onclick="window.openUpdateStatusModal(${order.orderID})" data-status="${order.status}" ${isCancelled ? 'disabled style="pointer-events: none; opacity: 0.5; border-color: #e5e7eb; background: #f3f4f6; color: #9ca3af;"' : ''}>
-                    <span class="selected-value">${order.status}</span>
-                    ${isCancelled ? '' : '<i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>'}
-                </button>
-            </td>
-            <td class="action-buttons" style="${cellOpacity}">
-                ${!isCancelled ? `
-                    <button class="action-btn delete" title="Cancel Order" onclick="window.handleOrderCancel(event, ${order.orderID})">
-                        <i data-lucide="ban"></i>
-                    </button>
-                ` : `
-                    <button class="action-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
-                        <i data-lucide="ban"></i>
-                    </button>
-                `}
-            </td>
-        </tr>
+    if (total === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center" style="padding: 40px; color: var(--text-muted); text-align: center;">
+                    No orders found.
+                </td>
+            </tr>
         `;
-    }).join('');
+    } else {
+        tbody.innerHTML = displayList.map(order => {
+            const isCancelled = order.status === 'Cancelled';
+            const rowStyle = isCancelled ? 'background-color: #f9fafb; color: #9ca3af;' : '';
+            const cellOpacity = isCancelled ? 'opacity: 0.5;' : '';
+            const idStyle = isCancelled ? 'text-decoration: line-through;' : '';
+
+            return `
+            <tr style="${rowStyle}">
+                <td class="id-cell" style="${cellOpacity} ${idStyle}">#${order.orderID}</td>
+                <td style="${cellOpacity}">
+                    <div class="customer-info">
+                        <span class="name" style="${isCancelled ? 'color: #9ca3af;' : ''}">${order.customerName}</span>
+                        <span class="phone" style="${isCancelled ? 'color: #d1d5db;' : ''}">${order.contactNum || ''}</span>
+                    </div>
+                </td>
+                <td style="${cellOpacity}">${order.datePlaced}</td>
+                <td style="${cellOpacity}">${order.dateClaimed || '-'}</td>
+                <td class="summary-clickable" onclick="window.openViewOrderModal(${order.orderID})" style="cursor: pointer; opacity: 1; position: relative; z-index: 2;">
+                    <div class="summary-cell">
+                        <span class="items" style="${isCancelled ? 'color: var(--text-main);' : ''}">${order.summary}</span>
+                        <span class="price" style="${isCancelled ? 'color: var(--text-main);' : ''}">₱${parseFloat(order.amount || 0).toFixed(2)}</span>
+                    </div>
+                </td>
+                <td class="payment-cell" style="${cellOpacity}">
+                    <span class="status-badge payment-badge" data-status="${isCancelled ? 'Cancelled' : (order.paymentStatus || 'Unpaid')}">${isCancelled ? 'Cancelled' : (order.paymentStatus || 'Unpaid')}</span>
+                </td>
+                <td class="status-cell">
+                    <button class="modal-dropdown-trigger small" onclick="window.openUpdateStatusModal(${order.orderID})" data-status="${order.status}" ${isCancelled ? 'disabled style="pointer-events: none; opacity: 0.5; border-color: #e5e7eb; background: #f3f4f6; color: #9ca3af;"' : ''}>
+                        <span class="selected-value">${order.status}</span>
+                        ${isCancelled ? '' : '<i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i>'}
+                    </button>
+                </td>
+                <td class="action-buttons" style="${cellOpacity}">
+                    ${!isCancelled ? `
+                        <button class="action-btn delete" title="Cancel Order" onclick="window.handleOrderCancel(event, ${order.orderID})">
+                            <i data-lucide="ban"></i>
+                        </button>
+                    ` : `
+                        <button class="action-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                            <i data-lucide="ban"></i>
+                        </button>
+                    `}
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
 
     if (infoEl) {
         infoEl.textContent = `Showing ${total === 0 ? 0 : start + 1} to ${end} of ${total} entries`;
@@ -655,6 +1270,13 @@ function renderOrderPagination(total) {
 function setupOrderFilters() {
     const tabs = document.querySelectorAll('.filter-tab');
     tabs.forEach(tab => {
+        const tabText = tab.textContent.trim();
+        if (tabText === orderFilter) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+
         tab.onclick = () => {
             tabs.forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
@@ -684,8 +1306,39 @@ function applyOrderFilters() {
         return matchesStatus && matchesSearch;
     });
 
+    // Sort the filtered orders
+    filteredOrders.sort((a, b) => {
+        let valA = a[orderSortKey];
+        let valB = b[orderSortKey];
+
+        if (orderSortKey === 'datePlaced' || orderSortKey === 'dateClaimed') {
+            valA = valA && valA !== '-' ? new Date(valA) : new Date(0);
+            valB = valB && valB !== '-' ? new Date(valB) : new Date(0);
+        } else if (orderSortKey === 'orderID') {
+            valA = parseInt(valA) || 0;
+            valB = parseInt(valB) || 0;
+        } else if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = (valB || '').toLowerCase();
+        }
+
+        if (valA < valB) return orderSortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return orderSortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
     renderOrderTable();
 }
+
+window.handleOrderSort = (key) => {
+    if (orderSortKey === key) {
+        orderSortDirection = orderSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        orderSortKey = key;
+        orderSortDirection = 'asc';
+    }
+    applyOrderFilters();
+};
 
 window.changeOrderPage = (page) => {
     currentOrderPage = page;
@@ -828,6 +1481,9 @@ window.openViewOrderModal = async (orderId) => {
         const contactEl = document.getElementById('viewOrderContact');
         if (contactEl) contactEl.textContent = order.contactNum || 'N/A';
 
+        const employeeEl = document.getElementById('viewOrderEmployee');
+        if (employeeEl) employeeEl.textContent = order.employeeName || 'N/A';
+
         const amountDueEl = document.getElementById('viewOrderAmountDue');
         if (amountDueEl) amountDueEl.textContent = `₱${parseFloat(order.amount || 0).toFixed(2)}`;
 
@@ -854,7 +1510,8 @@ window.openViewOrderModal = async (orderId) => {
         // Payment status
         const payStatusEl = document.getElementById('viewOrderSummaryPaymentStatus');
         if (payStatusEl) {
-            const status = order.paymentStatus || 'Unpaid';
+            const isCancelled = order.LaundryOrderStatus === 'Cancelled';
+            const status = isCancelled ? 'Cancelled' : (order.paymentStatus || 'Unpaid');
             payStatusEl.textContent = status;
             payStatusEl.setAttribute('data-status', status);
         }
@@ -863,11 +1520,18 @@ window.openViewOrderModal = async (orderId) => {
         const balanceRow = document.getElementById('viewOrderSummaryBalanceRow');
         const balanceEl = document.getElementById('viewOrderSummaryBalance');
         const balance = parseFloat(order.balance || 0);
-        if (balance > 0) {
-            if (balanceRow) balanceRow.style.display = 'flex';
-            if (balanceEl) balanceEl.textContent = `₱${balance.toFixed(2)}`;
-        } else {
-            if (balanceRow) balanceRow.style.display = 'none';
+        if (balanceEl) {
+            balanceEl.textContent = `₱${balance.toFixed(2)}`;
+            if (balance <= 0) {
+                balanceEl.className = 'info-tag gray';
+            } else if (order.paymentStatus === 'Partially Paid') {
+                balanceEl.className = 'info-tag partial';
+            } else {
+                balanceEl.className = 'info-tag unpaid';
+            }
+        }
+        if (balanceRow) {
+            balanceRow.style.display = 'flex';
         }
 
         // Timestamp
@@ -917,3 +1581,14 @@ window.closeViewOrderModal = () => {
 window.loadOrders = loadOrders;
 window.applyOrderFilters = applyOrderFilters;
 window.handleOrderCancel = handleOrderCancel;
+
+// Expose orderFilter to window for dashboard links and SPA state sync
+Object.defineProperty(window, 'orderFilter', {
+    get: () => orderFilter,
+    set: (val) => { 
+        orderFilter = val; 
+    },
+    configurable: true
+});
+
+})();

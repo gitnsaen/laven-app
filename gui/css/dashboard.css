@@ -202,16 +202,16 @@
 
 .status-badge {
     padding: 4px 10px;
-    border-radius: 8px;
+    border-radius: 999px; /* Differentiated Pill Shape */
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
 }
 
-.status-badge.pending { background: var(--pending-bg); color: var(--pending-text); }
-.status-badge.progress { background: var(--progress-bg); color: var(--progress-text); }
-.status-badge.done { background: var(--ready-bg); color: var(--ready-text); }
-.status-badge.claimed { background: var(--claimed-bg); color: var(--claimed-text); }
+.status-badge.pending { background: var(--order-pending-bg); color: var(--order-pending-text); }
+.status-badge.progress { background: var(--order-progress-bg); color: var(--order-progress-text); }
+.status-badge.done { background: var(--order-ready-bg); color: var(--order-ready-text); }
+.status-badge.claimed { background: var(--order-claimed-bg); color: var(--order-claimed-text); }
 
 .order-date { display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
 .customer-name { font-weight: 700; margin-bottom: 16px; }
@@ -334,6 +334,16 @@
 }
 
 .mini-stat { display: flex; align-items: center; gap: 16px; }
+.mini-stat[style*="cursor: pointer"] {
+    transition: var(--transition-snappy);
+    padding: 8px 12px;
+    border-radius: 16px;
+    margin: 0 -12px;
+}
+.mini-stat[style*="cursor: pointer"]:hover {
+    background-color: var(--main-bg);
+    transform: translateX(4px);
+}
 .stat-icon { 
     width: 40px; 
     height: 40px; 

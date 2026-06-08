@@ -108,13 +108,13 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Payment ID</th>
-                    <th>Order Ref</th>
-                    <th>Date</th>
-                    <th>Method</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Balance</th>
+                    <th onclick="window.handleRevenueSort('orderID')" style="cursor: pointer;">Order Ref <span id="sort-icon-orderID" class="sort-icon"></span></th>
+                    <th onclick="window.handleRevenueSort('paymentDate')" style="cursor: pointer;">Latest Activity <span id="sort-icon-paymentDate" class="sort-icon"></span></th>
+                    <th onclick="window.handleRevenueSort('amountDue')" style="cursor: pointer;">Total Due <span id="sort-icon-amountDue" class="sort-icon"></span></th>
+                    <th onclick="window.handleRevenueSort('amountPaid')" style="cursor: pointer;">Total Paid <span id="sort-icon-amountPaid" class="sort-icon"></span></th>
+                    <th>Payment Status</th>
+                    <th onclick="window.handleRevenueSort('remainingBalance')" style="cursor: pointer;">Remaining Balance <span id="sort-icon-remainingBalance" class="sort-icon"></span></th>
+                    <th style="text-align: right; padding-right: 32px;">Payments</th>
                 </tr>
             </thead>
             <tbody>
@@ -133,10 +133,10 @@
         <p class="pagination-info">Showing <span id="revPageStart">0</span> to <span id="revPageEnd">0</span> of <span
                 id="revTotalItems">0</span> entries</p>
         <div class="pagination-controls">
-            <button class="page-btn nav" id="revPrevBtn">Prev</button>
+            <button class="page-btn nav" id="revPrevBtn" disabled>Prev</button>
             <div id="revPageNumbers" style="display: flex; gap: 4px;">
             </div>
-            <button class="page-btn nav" id="revNextBtn">Next</button>
+            <button class="page-btn nav" id="revNextBtn" disabled>Next</button>
         </div>
     </div>
 </div>

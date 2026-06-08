@@ -29,10 +29,10 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Order ID</th>
-                    <th>Customer Name</th>
-                    <th>Date Placed</th>
-                    <th>Date Claimed</th>
+                    <th onclick="window.handleOrderSort('orderID')" style="cursor: pointer;">Order ID <span id="sort-icon-orderID" class="sort-icon"></span></th>
+                    <th onclick="window.handleOrderSort('customerName')" style="cursor: pointer;">Customer Name <span id="sort-icon-customerName" class="sort-icon"></span></th>
+                    <th onclick="window.handleOrderSort('datePlaced')" style="cursor: pointer;">Date Placed <span id="sort-icon-datePlaced" class="sort-icon"></span></th>
+                    <th onclick="window.handleOrderSort('dateClaimed')" style="cursor: pointer;">Date Claimed <span id="sort-icon-dateClaimed" class="sort-icon"></span></th>
                     <th>Summary</th>
                     <th>Payment</th>
                     <th>Status</th>
@@ -53,13 +53,7 @@
     </div>
 
     <div class="pagination-footer">
-        <p class="pagination-info">Showing 1 to 15 of 45 entries</p>
-        <div class="pagination-controls">
-            <button class="page-btn nav">Prev</button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn">2</button>
-            <button class="page-btn">3</button>
-            <button class="page-btn nav">Next</button>
-        </div>
+        <p class="pagination-info"></p>
+        <div class="pagination-controls"></div>
     </div>
 </div>

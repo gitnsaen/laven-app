@@ -21,10 +21,10 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Employee ID</th>
-                    <th>Staff Name</th>
-                    <th>Contact Number</th>
-                    <th>Joined Date</th>
+                    <th onclick="window.handleEmployeeSort('employeeID')" style="cursor: pointer;">Employee ID <span id="sort-icon-employeeID" class="sort-icon"></span></th>
+                    <th onclick="window.handleEmployeeSort('firstName')" style="cursor: pointer;">Staff Name <span id="sort-icon-firstName" class="sort-icon"></span></th>
+                    <th onclick="window.handleEmployeeSort('contactNum')" style="cursor: pointer;">Contact Number <span id="sort-icon-contactNum" class="sort-icon"></span></th>
+                    <th onclick="window.handleEmployeeSort('joinedDate')" style="cursor: pointer;">Joined Date <span id="sort-icon-joinedDate" class="sort-icon"></span></th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -42,11 +42,7 @@
     </div>
 
     <div class="pagination-footer">
-        <p class="pagination-info">Showing 1 to 2 of 10 entries</p>
-        <div class="pagination-controls">
-            <button class="page-btn nav">Prev</button>
-            <button class="page-btn active">1</button>
-            <button class="page-btn nav">Next</button>
-        </div>
+        <p class="pagination-info"></p>
+        <div class="pagination-controls"></div>
     </div>
 </div>

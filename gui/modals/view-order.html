@@ -9,9 +9,9 @@
                 <h2 class="modal-title">Order Details</h2>
                 <div class="summary-banner"
                     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                    <span id="viewOrderIdBannerText">Order #10045</span>
-                    <span id="viewOrderOrderStatusBadge" class="status-badge" data-status="On Progress"
-                        style="font-size: 14px; padding: 8px 20px;">On Progress</span>
+                    <span id="viewOrderIdBannerText">Order #----</span>
+                    <span id="viewOrderOrderStatusBadge" class="status-badge order-badge" data-status=""
+                        style="font-size: 14px; padding: 8px 20px; display: none;"></span>
                 </div>
 
                 <div class="summary-grid">
@@ -26,26 +26,12 @@
                                 </tr>
                             </thead>
                             <tbody id="viewOrderItems">
-                                <tr class="table-group-header">
-                                    <td colspan="4">Services</td>
-                                </tr>
-                                <tr>
-                                    <td>Wash</td>
-                                    <td>₱40.00</td>
-                                    <td>2 kg</td>
-                                    <td>₱80.00</td>
-                                </tr>
-                                <tr>
-                                    <td>Dry</td>
-                                    <td>₱60.00</td>
-                                    <td>1 kg</td>
-                                    <td>₱60.00</td>
-                                </tr>
+                                <!-- Dynamically populated -->
                             </tbody>
                             <tfoot>
                                 <tr class="table-total">
                                     <td colspan="3">TOTAL</td>
-                                    <td id="viewOrderTotal">₱140.00</td>
+                                    <td id="viewOrderTotal">₱0.00</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -55,29 +41,32 @@
                         <div class="summary-info-block">
                             <div class="info-row">
                                 <span class="info-label">Customer:</span>
-                                <span class="info-tag" id="viewOrderCustomer">Jane Doe</span>
+                                <span class="info-tag" id="viewOrderCustomer">--</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Contact:</span>
-                                <span class="info-tag" id="viewOrderContact">0912 345 6789</span>
+                                <span class="info-tag" id="viewOrderContact">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Handled by:</span>
+                                <span class="info-tag" id="viewOrderEmployee">--</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Amount Due:</span>
-                                <span class="info-tag" id="viewOrderAmountDue" style="font-weight: 700;">₱140.00</span>
+                                <span class="info-tag" id="viewOrderAmountDue" style="font-weight: 700;">₱0.00</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Amount Paid:</span>
-                                <span class="info-tag" id="viewOrderAmountPaid" style="font-weight: 700;">₱140.00</span>
+                                <span class="info-tag" id="viewOrderAmountPaid" style="font-weight: 700;">₱0.00</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Payment Method:</span>
-                                <span class="info-tag" id="viewOrderPaymentMethod"
-                                    style="background: var(--claimed-bg); color: var(--claimed-text);">G-Cash</span>
+                                <span class="info-tag" id="viewOrderPaymentMethod">--</span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Payment Status:</span>
-                                <span class="info-tag status-tag" id="viewOrderSummaryPaymentStatus"
-                                    data-status="Paid">Paid</span>
+                                <span class="info-tag status-tag payment-badge" id="viewOrderSummaryPaymentStatus"
+                                    data-status="Unpaid">Unpaid</span>
                             </div>
                             <div class="info-row" id="viewOrderSummaryBalanceRow" style="display: none;">
                                 <span class="info-label">Remaining Balance:</span>
@@ -87,8 +76,7 @@
                         </div>
 
                         <div class="summary-timestamp mt-8!" id="viewOrderTimestamp">
-                            25 October 2023, Wednesday<br>
-                            10:30 AM
+                            --
                         </div>
                     </div>
                 </div>
