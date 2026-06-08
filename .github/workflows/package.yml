@@ -44,10 +44,16 @@ jobs:
     - name: Install Python Dependencies (Linux gi link)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        # Link system gi into the venv/toolcache Python so PyInstaller can collect it
+        SYS_GI=$(find /usr/lib/python3 -maxdepth 3 -name "gi" -type d | head -1)
+        echo "Found gi at: $SYS_GI"
         SITE=$(python -c "import site; print(site.getsitepackages()[0])")
-        SYS_GI=$(python3 -c "import gi, os; print(os.path.dirname(gi.__file__))")
+        echo "Linking into: $SITE"
         ln -sf "$SYS_GI" "$SITE/gi"
+        GI_SO=$(find /usr/lib/python3 -maxdepth 4 -name "_gi*.so" | head -1)
+        if [ -n "$GI_SO" ]; then
+          ln -sf "$GI_SO" "$SITE/$(basename $GI_SO)"
+        fi
+        python -c "import gi; print('gi OK:', gi.__file__)"
 
     - name: Build Executable (Windows)
       if: matrix.os == 'windows-latest'
