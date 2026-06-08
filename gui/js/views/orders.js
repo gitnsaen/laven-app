@@ -698,6 +698,11 @@ window.clearStep2 = () => {
     orderDraft.paymentMethod = 'Cash';
     orderDraft.amountPaid = 0;
 
+    const payMethodTrigger = document.querySelector('#addOrderModal .payment-row .modal-dropdown-trigger.small .selected-value');
+    if (payMethodTrigger) payMethodTrigger.textContent = 'Cash';
+    const payMethodBtn = document.querySelector('#addOrderModal .payment-row .modal-dropdown-trigger.small');
+    if (payMethodBtn) payMethodBtn.setAttribute('data-status', 'Cash');
+
     const suggestionsBox = document.getElementById('custSuggestions');
     if (suggestionsBox) {
         suggestionsBox.style.display = 'none';
@@ -899,6 +904,13 @@ window.openUpdateStatusModal = async (orderId) => {
     const paymentMethodSection = document.getElementById('updatePaymentMethodSection');
     if (paymentMethodSection) {
         paymentMethodSection.style.display = 'none';
+    }
+
+    const updatePayMethodTrigger = document.getElementById('updatePaymentMethodTrigger');
+    if (updatePayMethodTrigger) {
+        updatePayMethodTrigger.setAttribute('data-status', 'Cash');
+        const triggerText = updatePayMethodTrigger.querySelector('.selected-value');
+        if (triggerText) triggerText.textContent = 'Cash';
     }
 
     window.handleUpdatePaymentInput(paymentInput); // Initialize preview

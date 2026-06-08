@@ -75,6 +75,20 @@ class DashboardService:
             return f"{column_name} >= ?", (start,)
         return "1=1", ()
 
+    def _get_unpaid_balance(self, cursor, timeframe):
+        clause, params = self._get_date_filter_clause(timeframe, "o.datePlaced")
+        cursor.execute(f'''
+            SELECT COALESCE(SUM(
+                COALESCE((SELECT SUM(s.price * os.quantity) FROM LaundryOrder_Service os JOIN Service s ON os.serviceID = s.serviceID WHERE os.LaundryOrderID = o.LaundryOrderID), 0) +
+                COALESCE((SELECT SUM(a.price * oa.quantity) FROM LaundryOrder_Addon oa JOIN Addon a ON oa.addonID = a.addonID WHERE oa.LaundryOrderID = o.LaundryOrderID), 0)
+                - 
+                COALESCE((SELECT SUM(p.amount) FROM Payment p WHERE p.orderID = o.LaundryOrderID AND p.status = 'Completed'), 0)
+            ), 0.0)
+            FROM LaundryOrder o
+            WHERE o.paymentStatus != 'Paid' AND o.LaundryOrderStatus != 'Cancelled' AND {clause}
+        ''', params)
+        return float(cursor.fetchone()[0] or 0)
+
     def get_revenue_data(self, timeframe='Today'):
         try:
             conn = self.api.base.get_connection()
@@ -163,7 +177,7 @@ class DashboardService:
                 })
 
             total_collected = sum(p['amountPaid'] for p in payments if p['orderProgressStatus'] != 'Cancelled' and p['paymentStatus'] != 'Cancelled')
-            unpaid_balances = sum(p['balance'] for p in payments if p['status'] != 'Paid' and p['orderProgressStatus'] != 'Cancelled')
+            unpaid_balances = self._get_unpaid_balance(cursor, timeframe)
             total_cash = sum(p['amountPaid'] for p in payments if p['method'] == 'Cash' and p['orderProgressStatus'] != 'Cancelled' and p['paymentStatus'] != 'Cancelled')
             total_gcash = sum(p['amountPaid'] for p in payments if p['method'] == 'G-Cash' and p['orderProgressStatus'] != 'Cancelled' and p['paymentStatus'] != 'Cancelled')
             
@@ -323,20 +337,9 @@ class DashboardService:
 
     def get_dashboard_unpaid(self, timeframe='Today'):
         try:
-            clause, params = self._get_date_filter_clause(timeframe, "o.datePlaced")
             conn = self.api.base.get_connection()
             cursor = conn.cursor()
-            cursor.execute(f'''
-                SELECT COALESCE(SUM(
-                    COALESCE((SELECT SUM(s.price * os.quantity) FROM LaundryOrder_Service os JOIN Service s ON os.serviceID = s.serviceID WHERE os.LaundryOrderID = o.LaundryOrderID), 0) +
-                    COALESCE((SELECT SUM(a.price * oa.quantity) FROM LaundryOrder_Addon oa JOIN Addon a ON oa.addonID = a.addonID WHERE oa.LaundryOrderID = o.LaundryOrderID), 0)
-                    - 
-                    COALESCE((SELECT SUM(p.amount) FROM Payment p WHERE p.orderID = o.LaundryOrderID AND p.status = 'Completed'), 0)
-                ), 0.0)
-                FROM LaundryOrder o
-                WHERE o.paymentStatus != 'Paid' AND o.LaundryOrderStatus != 'Cancelled' AND {clause}
-            ''', params)
-            total_unpaid = float(cursor.fetchone()[0] or 0)
+            total_unpaid = self._get_unpaid_balance(cursor, timeframe)
             conn.close()
             return {"status": "success", "value": total_unpaid}
         except Exception as e:
