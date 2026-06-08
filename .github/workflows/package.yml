@@ -105,8 +105,10 @@ jobs:
     - name: Build Executable
       run: |
         .venv/bin/pyinstaller --noconsole --onefile --name "laven" \
-          --collect-all gi \
           --collect-all webview \
+          --exclude-module gi.repository.WebKit2 \
+          --exclude-module gi.repository.Gtk \
+          --exclude-module gi.repository.GLib \
           --add-data "gui:gui" \
           --add-data "database_schema.sql:." \
           main.py
